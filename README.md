@@ -6,4 +6,5 @@ Ohjelma etsii annetusta genomista CpG-saarekkeita.
 
 ### Linkkejä
 
-https://en.wikipedia.org/wiki/CpG_site
+- https://en.wikipedia.org/wiki/CpG_site
+- README writing and formatting syntax: [Writing on GitHub](https://help.github.com/articles/basic-writing-and-formatting-syntax/)
