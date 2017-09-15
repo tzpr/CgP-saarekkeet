@@ -4,7 +4,7 @@ Python ohjelmointia biotieteilijöille ([A529048](https://courses.helsinki.fi/fi
 Ohjelma etsii annetusta genomista CpG-saarekkeita.
 
 
-### Linkkejä
+### Aiheeseen liittyviä linkkejä
 
 - https://en.wikipedia.org/wiki/CpG_site
 - https://docs.anaconda.com/anaconda/
