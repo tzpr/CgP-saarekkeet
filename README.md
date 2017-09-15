@@ -7,4 +7,7 @@ Ohjelma etsii annetusta genomista CpG-saarekkeita.
 ### Linkkejä
 
 - https://en.wikipedia.org/wiki/CpG_site
+- https://docs.anaconda.com/anaconda/
+- https://pythonhosted.org/spyder/
+- https://www.python.org/dev/peps/pep-0008/
 - README writing and formatting syntax: [Writing on GitHub](https://help.github.com/articles/basic-writing-and-formatting-syntax/)
