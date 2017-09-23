@@ -5,6 +5,7 @@ import Bio.Entrez
 import Bio.SeqIO
 
 
+
 def read_fasta_file_from_the_internet(organism_name, email):
     '''
     Try to find genome for given organism from the internet in a fasta format.
@@ -43,7 +44,11 @@ def parse_genome_from_fasta_file(file):
     
     # TODO: parse file and populate the tuple
     
-    return nucleotides_tuple
+    dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
+    
+    # why tuple? why not just a string?
+    # return nucleotides_tuple
+    return dummy_test_seq
 
 
 def island_rule_1_ok(nucleotide_list):
@@ -76,6 +81,14 @@ def island_rule_3_ok(nucleotide_list):
     return false
 
 
+# TODO: what should this return?
+def find_islands(nucleotide_seq):
+    '''
+    Find CpG islands from the given nucleotide sequence
+    '''
+    print('find_islands')
+    
+
 def start():
     '''
     The main thing.
@@ -89,16 +102,16 @@ def start():
     if(organism1 == 'testing'):
         fasta_for_org1  = read_fasta_file_from_filesystem(test_fasta_file)
     elif(organism1 is not '' and email is not ''):
-        fasta_for_org1 = read_fasta_file_from_the_internet(organism1, email)
+        find_islands(parse_genome_from_fasta_file(
+                read_fasta_file_from_the_internet(organism1, email)))
         if(organism2 is not ''):
-            fasta_for_org2 = read_fasta_file_from_the_internet(organism2, email)
+            find_islands(parse_genome_from_fasta_file(
+                    read_fasta_file_from_the_internet(organism2, email)))
     else:
         if(organism1 is ''):
             print('Anna jokin eliö!')
         if(email is ''):
             print('Sähköpostiosoite tarvitaan internet-hakuun!')
-    
-    print('started!')
 
 
 # guard to only execute code when a file is invoked as a script
