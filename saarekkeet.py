@@ -40,14 +40,13 @@ def parse_genome_from_fasta_file(file):
     '''
     Read genome from fasta file to an immutable list (tuple) of nucleotides.
     '''
-    nucleotides_tuple = () # lets use immutable list, tuple (we don't need mutations at this point!)
+    nucleotides_str = '' # 
     
-    # TODO: parse file and populate the tuple
+    # TODO: parse file and populate the nucleotides_str
     
     dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
     
-    # why tuple? why not just a string?
-    # return nucleotides_tuple
+    # return nucleotides_str
     return dummy_test_seq
 
 
@@ -86,6 +85,14 @@ def find_islands(nucleotide_seq):
     '''
     Find CpG islands from the given nucleotide sequence
     '''
+    island_min_length = 200
+    index = 0
+    
+    for nucleotide in nucleotide_seq:
+        index = index + 1
+        print(nucleotide)
+    
+    
     print('find_islands')
     
 
