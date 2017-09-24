@@ -3,18 +3,53 @@
 
 import Bio.Entrez
 import Bio.SeqIO
+from optparse import OptionParser  # obs! deprecated module (but good for now)
 
 
 
 # global variable that holds the messages shown to user
 TEXTS_DICT = {
-    'invalid_condition': 'ERROR ERROR!',
     'organism_input_1': 'Anna eliö 1: ',
     'organism_input_2': 'Anna eliö 2: ',
     'email_input': 'Anna email: ',
     'empty_organism_input': 'Anna jokin eliö!',
     'empty_email_input': 'Sähköpostiosoite tarvitaan internet-hakuun!'
 }
+
+
+def read_command_line_arguments():
+    ''' Read and store predefined optional commandline arguments. Uses
+        optparse module. '''
+    options_dict = {}
+    # initialize options_dict with default values
+    options_dict['sample_window_size'] = 20
+    options_dict['gc_percentage_threshold'] = 50
+    options_dict['cpg_ratio_threshold'] = 60
+
+    # https://docs.python.org/2/library/optparse.html
+    parser = OptionParser()
+    parser.add_option('-s', '--size', dest='sample_window_size',
+                      help='set the sample window size.', type=int)
+    parser.add_option('-p', '--gcp', dest='gc_percentage',
+                      help='set the maximum time for the answer.', type=int)
+    parser.add_option('-r', '--ratio', dest='cpg_ratio',
+                      help='set the number of computer players. ' +
+                      'Note: computer players continue the game till the end! ',
+                      type=int)
+    # get the options, discard the leftover arguments with _
+    (options, _) = parser.parse_args()
+
+    if options.sample_window_size is not None:
+        options_dict['sample_window_size'] = options.sample_window_size
+
+    if options.gc_percentage is not None:
+        options_dict['gc_percentage_threshold'] = options.gc_percentage
+
+    if options.cpg_ratio is not None:
+        options_dict['cpg_ratio_threshold'] = options.cpg_ratio
+
+    return options_dict
+
 
 def read_fasta_file_from_the_internet(organism_name, email):
     '''
@@ -64,12 +99,12 @@ def parse_genome_from_fasta_file(file):
     return dummy_test_seq
 
 
-def island_rule_1_ok(nucleotide_seq_str):
+def island_rule_1_ok(nucleotide_seq_str, options):
     '''
     Check if the CpG sites rule #1 is satisfied
     A GC percentage greater than 50% (https://en.wikipedia.org/wiki/CpG_site)
     '''    
-    # calculations could be in a separate functions
+    gc_percentage_threshold = options['gc_percentage_threshold']
     
     sample_seq_length = len(nucleotide_seq_str)
     g_nucleotides_count = nucleotide_seq_str.count('G')
@@ -79,19 +114,19 @@ def island_rule_1_ok(nucleotide_seq_str):
     c_percentage = (c_nucleotides_count/sample_seq_length) * 100
     gc_percentage = g_percentage + c_percentage
     
-    if(gc_percentage >= 50):
+    if(gc_percentage >= gc_percentage_threshold):
         return True
     
     return False
 
 
-def island_rule_2_ok(nucleotide_seq_str):
+def island_rule_2_ok(nucleotide_seq_str, options):
     '''
     Check if the CpG sites rule #2 is satisfied
     An observed-to-expected CpG ratio greater than 60 % 
     (https://en.wikipedia.org/wiki/CpG_site)
     '''    
-    # calculations could be in a separate functions
+    cpg_ratio_threshold = options['cpg_ratio_threshold']
     
     gc_pairs_obs = nucleotide_seq_str.count('GC')
     gc_pairs_exp = (nucleotide_seq_str.count('C') * 
@@ -101,35 +136,35 @@ def island_rule_2_ok(nucleotide_seq_str):
     
     cpg_ratio = (gc_pairs_obs/gc_pairs_exp) * 100
     
-    if(cpg_ratio > 60):
+    if(cpg_ratio > cpg_ratio_threshold):
         return True
     
     return False
 
 
-def island_conditions_ok(seq):
+def island_conditions_ok(seq, options):
     '''
     Check if island conditions are met
     '''
-    return (island_rule_1_ok(seq) and island_rule_2_ok(seq))
+    return (island_rule_1_ok(seq, options) and island_rule_2_ok(seq, options))
 
 
-def find_islands(nucleotide_seq):
+def find_islands(nucleotide_seq, options):
     '''
     Find CpG islands from the given nucleotide sequence
     
     '''    
     cpg_islands_list = []
-    SAMPLE_LENGTH = 20
+    SAMPLE_LENGTH = options['sample_window_size']
     start_index = 0
     end_index = SAMPLE_LENGTH
     sample_seq = nucleotide_seq[start_index:end_index]
      
     while(len(sample_seq) >= SAMPLE_LENGTH):
-        if(island_conditions_ok(sample_seq)):
+        if(island_conditions_ok(sample_seq, options)):
             end_index = end_index + 1
             sample_seq = nucleotide_seq[start_index:end_index]
-        elif(not island_conditions_ok(sample_seq)):
+        else:
             if(len(sample_seq) == SAMPLE_LENGTH):
                 start_index = start_index + 1
                 end_index = start_index + SAMPLE_LENGTH
@@ -139,8 +174,6 @@ def find_islands(nucleotide_seq):
                 start_index = end_index
                 end_index = start_index + SAMPLE_LENGTH
                 sample_seq = nucleotide_seq[start_index:end_index]
-        else:
-            raise Exception(TEXTS_DICT['invalid_condition'])
             
     return cpg_islands_list
     
@@ -150,6 +183,7 @@ def start():
     The main thing.
     '''
     test_fasta_file = 'SH1_genome.fasta'
+    options = read_command_line_arguments()
     
     organism1 = input(TEXTS_DICT['organism_input_1'])
     organism2 = input(TEXTS_DICT['organism_input_2'])
@@ -160,13 +194,13 @@ def start():
     
     if(organism1 == 'testing'):
         islands_test = find_islands(parse_genome_from_fasta_file(
-                read_fasta_file_from_filesystem(test_fasta_file)))
+                read_fasta_file_from_filesystem(test_fasta_file)), options)
     elif(organism1 is not '' and email is not ''):
         islands_org1 = find_islands(parse_genome_from_fasta_file(
-                read_fasta_file_from_the_internet(organism1, email)))
+                read_fasta_file_from_the_internet(organism1, email)), options)
         if(organism2 is not ''):
             islands_org2 = find_islands(parse_genome_from_fasta_file(
-                    read_fasta_file_from_the_internet(organism2, email)))
+                    read_fasta_file_from_the_internet(organism2, email)), options)
     else:
         if(organism1 is ''):
             print(TEXTS_DICT['empty_organism_input'])
