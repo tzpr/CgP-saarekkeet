@@ -54,29 +54,43 @@ def island_rule_1_ok(nucleotide_seq_str):
     '''
     Check if the CpG sites rule #1 is satisfied
     A GC percentage greater than 50% (https://en.wikipedia.org/wiki/CpG_site)
-    '''
-    verdict = False
+    '''    
+    # calculations could be in a separate functions
     
     sample_seq_length = len(nucleotide_seq_str)
-    gc_pairs_count = nucleotide_seq_str.count('GC')
-    gc_nucleotides_count = 2 * gc_pairs_count
+    g_nucleotides_count = nucleotide_seq_str.count('G')
+    c_nucleotides_count = nucleotide_seq_str.count('C')
     
-    gc_percentage = (gc_nucleotides_count/sample_seq_length) * 100
+    g_percentage = (g_nucleotides_count/sample_seq_length) * 100
+    c_percentage = (c_nucleotides_count/sample_seq_length) * 100
+    gc_percentage = g_percentage + c_percentage
     
     if(gc_percentage >= 50):
-        verdict = True
+        return True
     
-    return verdict
+    return False
 
 
 def island_rule_2_ok(nucleotide_seq_str):
     '''
     Check if the CpG sites rule #2 is satisfied
-    An observed-to-expected CpG ratio greater than 60 % (https://en.wikipedia.org/wiki/CpG_site)
-    '''
-    print('island_rule_2_ok')
+    An observed-to-expected CpG ratio greater than 60 % 
+    (https://en.wikipedia.org/wiki/CpG_site)
+    '''    
+    # calculations could be in a separate functions
     
-    return false
+    gc_pairs_obs = nucleotide_seq_str.count('GC')
+    gc_pairs_exp = (nucleotide_seq_str.count('C') * 
+                    nucleotide_seq_str.count('G')) / len(nucleotide_seq_str)
+    if(gc_pairs_exp == 0):
+        return False
+    
+    cpg_ratio = (gc_pairs_obs/gc_pairs_exp) * 100
+    
+    if(cpg_ratio > 60):
+        return True
+    
+    return False
 
 
 # TODO: what should this return?
@@ -87,21 +101,17 @@ def find_islands(nucleotide_seq):
     '''
     print('find_islands')
     
-    first_200 = nucleotide_seq[:40] 
+     # first find an island(s) then make a map(s)
     
-    print(first_200)
-    island_rule_1_ok(first_200)
+    first_200 = nucleotide_seq[:200]
+    
+    verdict = (island_rule_1_ok(first_200) and island_rule_2_ok(first_200))
+    
+    print(first_200, str(verdict))
     
     
-    island_min_length = 200
-    index = 0
+   
     
-    for nucleotide in nucleotide_seq:
-        index = index + 1
-        #print(nucleotide)
-
-    
-
 def start():
     '''
     The main thing.
