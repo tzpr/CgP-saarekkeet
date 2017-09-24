@@ -43,14 +43,18 @@ def read_fasta_file_from_filesystem(file_name):
     '''
     Mainly for testing purposes.
     '''
-    print('read_fasta_from_filesystem')
+    # TODO: read fasta file
+    
+    dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
+    
+    return dummy_test_seq
     
 
 def parse_genome_from_fasta_file(file):
     '''
     Read genome from fasta file to an immutable list (tuple) of nucleotides.
     '''
-    nucleotides_str = '' # 
+    nucleotides_str = '' 
     
     # TODO: parse file and populate the nucleotides_str
     
@@ -168,9 +172,12 @@ def start():
             print(TEXTS_DICT['empty_organism_input'])
         if(email is ''):
             print(TEXTS_DICT['empty_email_input'])
-            
-    # check the islands and do something  
-    print('islands found:', islands_org1)      
+             
+    print('islands found:', islands_org1) 
+
+    # TODO: compare CpG-islands if two genomes were given 
+    
+    # TODO: visualize CpG-islands in genome
 
 
 # guard to only execute code when a file is invoked as a script
