@@ -6,6 +6,16 @@ import Bio.SeqIO
 
 
 
+# global variable that holds the messages shown to user
+TEXTS_DICT = {
+    'invalid_condition': 'ERROR ERROR!',
+    'organism_input_1': 'Anna eliö 1: ',
+    'organism_input_2': 'Anna eliö 2: ',
+    'email_input': 'Anna email: ',
+    'empty_organism_input': 'Anna jokin eliö!',
+    'empty_email_input': 'Sähköpostiosoite tarvitaan internet-hakuun!'
+}
+
 def read_fasta_file_from_the_internet(organism_name, email):
     '''
     Try to find genome for given organism from the internet in a fasta format.
@@ -93,24 +103,43 @@ def island_rule_2_ok(nucleotide_seq_str):
     return False
 
 
-# TODO: what should this return?
+def island_conditions_ok(seq):
+    '''
+    Check if island conditions are met
+    '''
+    return (island_rule_1_ok(seq) and island_rule_2_ok(seq))
+
+
 def find_islands(nucleotide_seq):
     '''
     Find CpG islands from the given nucleotide sequence
     
-    '''
-    print('find_islands')
+    '''    
+    cpg_islands_list = []
+    SAMPLE_LENGTH = 20
+    start_index = 0
+    end_index = SAMPLE_LENGTH
+    sample_seq = nucleotide_seq[start_index:end_index]
+     
+    while(len(sample_seq) >= SAMPLE_LENGTH):
+        if(island_conditions_ok(sample_seq)):
+            end_index = end_index + 1
+            sample_seq = nucleotide_seq[start_index:end_index]
+        elif(not island_conditions_ok(sample_seq)):
+            if(len(sample_seq) == SAMPLE_LENGTH):
+                start_index = start_index + 1
+                end_index = start_index + SAMPLE_LENGTH
+                sample_seq = nucleotide_seq[start_index:end_index]
+            else:
+                cpg_islands_list.append(sample_seq)
+                start_index = end_index
+                end_index = start_index + SAMPLE_LENGTH
+                sample_seq = nucleotide_seq[start_index:end_index]
+        else:
+            raise Exception(TEXTS_DICT['invalid_condition'])
+            
+    return cpg_islands_list
     
-     # first find an island(s) then make a map(s)
-    
-    first_200 = nucleotide_seq[:200]
-    
-    verdict = (island_rule_1_ok(first_200) and island_rule_2_ok(first_200))
-    
-    print(first_200, str(verdict))
-    
-    
-   
     
 def start():
     '''
@@ -118,23 +147,30 @@ def start():
     '''
     test_fasta_file = 'SH1_genome.fasta'
     
-    organism1 = input('Anna eliö 1: ')
-    organism2 = input('Anna eliö 2: ')
-    email = input('Anna email: ')
+    organism1 = input(TEXTS_DICT['organism_input_1'])
+    organism2 = input(TEXTS_DICT['organism_input_2'])
+    email = input(TEXTS_DICT['email_input'])
+    islands_org1 = []
+    islands_org2 = []
+    islands_test = []
     
     if(organism1 == 'testing'):
-        fasta_for_org1  = read_fasta_file_from_filesystem(test_fasta_file)
+        islands_test = find_islands(parse_genome_from_fasta_file(
+                read_fasta_file_from_filesystem(test_fasta_file)))
     elif(organism1 is not '' and email is not ''):
-        find_islands(parse_genome_from_fasta_file(
+        islands_org1 = find_islands(parse_genome_from_fasta_file(
                 read_fasta_file_from_the_internet(organism1, email)))
         if(organism2 is not ''):
-            find_islands(parse_genome_from_fasta_file(
+            islands_org2 = find_islands(parse_genome_from_fasta_file(
                     read_fasta_file_from_the_internet(organism2, email)))
     else:
         if(organism1 is ''):
-            print('Anna jokin eliö!')
+            print(TEXTS_DICT['empty_organism_input'])
         if(email is ''):
-            print('Sähköpostiosoite tarvitaan internet-hakuun!')
+            print(TEXTS_DICT['empty_email_input'])
+            
+    # check the islands and do something  
+    print('islands found:', islands_org1)      
 
 
 # guard to only execute code when a file is invoked as a script
