@@ -50,32 +50,31 @@ def parse_genome_from_fasta_file(file):
     return dummy_test_seq
 
 
-def island_rule_1_ok(nucleotide_list):
+def island_rule_1_ok(nucleotide_seq_str):
     '''
     Check if the CpG sites rule #1 is satisfied
-    A region with at least 200 bp (https://en.wikipedia.org/wiki/CpG_site)
-    '''
-    print('island_rule_1_ok')
-    
-    return false
-
-
-def island_rule_2_ok(nucleotide_list):
-    '''
-    Check if the CpG sites rule #2 is satisfied
     A GC percentage greater than 50% (https://en.wikipedia.org/wiki/CpG_site)
     '''
-    print('island_rule_2_ok')
+    verdict = False
     
-    return false
+    sample_seq_length = len(nucleotide_seq_str)
+    gc_pairs_count = nucleotide_seq_str.count('GC')
+    gc_nucleotides_count = 2 * gc_pairs_count
+    
+    gc_percentage = (gc_nucleotides_count/sample_seq_length) * 100
+    
+    if(gc_percentage >= 50):
+        verdict = True
+    
+    return verdict
 
 
-def island_rule_3_ok(nucleotide_list):
+def island_rule_2_ok(nucleotide_seq_str):
     '''
-    Check if the CpG sites rule #3 is satisfied
+    Check if the CpG sites rule #2 is satisfied
     An observed-to-expected CpG ratio greater than 60 % (https://en.wikipedia.org/wiki/CpG_site)
     '''
-    print('island_rule_3_ok')
+    print('island_rule_2_ok')
     
     return false
 
@@ -84,16 +83,23 @@ def island_rule_3_ok(nucleotide_list):
 def find_islands(nucleotide_seq):
     '''
     Find CpG islands from the given nucleotide sequence
+    
     '''
+    print('find_islands')
+    
+    first_200 = nucleotide_seq[:40] 
+    
+    print(first_200)
+    island_rule_1_ok(first_200)
+    
+    
     island_min_length = 200
     index = 0
     
     for nucleotide in nucleotide_seq:
         index = index + 1
-        print(nucleotide)
-    
-    
-    print('find_islands')
+        #print(nucleotide)
+
     
 
 def start():
