@@ -1,1 +1,7 @@
+
+# pycharm files
 .idea/
+
+# python virtual env
+env-saarekkeet
+
