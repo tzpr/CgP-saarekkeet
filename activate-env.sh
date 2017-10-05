@@ -1,7 +1,7 @@
 #!/bin/bash
-# create and activate python environment for sana-domino project
+# create and activate python environment for CgP-saarekkeet project
 # script follows loosely https://google.github.io/styleguide/shell.xml
-# about virtual envs https://docs.python.org/3/library/venv.html
+# about virtual envs: https://docs.python.org/3/library/venv.html
 
 
 ENV_NAME=env-saarekkeet
@@ -41,7 +41,7 @@ activate_env() {
 # Install needed modules to created env.
 #
 # Installed modules:
-# https://pypi.python.org/pypi/func_timeout/4.2.0
+# http://biopython.org/
 # https://github.com/PyCQA/pycodestyle
 # https://pypi.python.org/pypi/autopep8/
 # https://www.pylint.org/
