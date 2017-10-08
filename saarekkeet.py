@@ -16,14 +16,16 @@ TEXTS_DICT = {
     'empty_email_input': 'Sähköpostiosoite tarvitaan internet-hakuun!'
 }
 
+OPTIONS_DICT = {}
+
 
 def read_command_line_arguments():
     ''' Read and store predefined optional commandline arguments. Uses
         optparse module. '''
     options_dict = {}
     # initialize options_dict with default values
-    options_dict['sample_window_size'] = 20
-    options_dict['gc_percentage_threshold'] = 50
+    options_dict['sample_window_size'] = 200
+    options_dict['gc_percentage_threshold'] = 70
     options_dict['cpg_ratio_threshold'] = 60
 
     # https://docs.python.org/2/library/optparse.html
@@ -56,55 +58,48 @@ def read_fasta_file_from_the_internet(organism_name, email):
     Try to find genome for given organism from the internet in a fasta format.
     (http://biopython.org/DIST/docs/api/Bio.Entrez-module.html)
     
-    Throws exception in case of an unknown organism.
     '''
-    # TODO verify email and organism_name
     
-    # working implementation
-    # Bio.Entrez.email = email
-    #handle = Bio.Entrez.efetch(db="nucleotide", rettype="gb", retmode="text", id=organism_name)
-    #seq_record = Bio.SeqIO.read(handle, "gb")
-    #handle.close()
+    Bio.Entrez.email = email
+    handle = Bio.Entrez.efetch(db="nucleotide", rettype="gb", retmode="text", 
+                               id=organism_name)
+    seq_record = Bio.SeqIO.read(handle, "gb")
+    handle.close()
     #print("Genbank ID:", seq_record.id)
     #print("Annotations:", seq_record.annotations)
     #print("Features:", seq_record.features)
-    #print("Sekvenssi:", seq_record.seq)    
-    
-    
-    print('read_fast_from_the_internet')
+    #print("Sekvenssi:", seq_record.format("fasta"))
+
+    return seq_record.seq
     
 
-def read_fasta_file_from_filesystem(file_name):
+def read_test_fasta_file_from_filesystem():
     '''
     Mainly for testing purposes.
     '''
-    # TODO: read fasta file
-    
     dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
     
-    return dummy_test_seq
+    test_fasta_file = 'SH1_genome.fasta'
+    genome_seq = []
+    
+    with open(test_fasta_file) as f: 
+        header_line = f.readline()
+        for line in f: 
+            genome_seq.append(line.strip())
+    
+    return ''.join(genome_seq)
     
 
-def parse_genome_from_fasta_file(file):
-    '''
-    Read genome from fasta file to an immutable list (tuple) of nucleotides.
-    '''
-    nucleotides_str = '' 
-    
-    # TODO: parse file and populate the nucleotides_str
-    
-    dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
-    
-    # return nucleotides_str
-    return dummy_test_seq
-
-
-def island_rule_1_ok(nucleotide_seq_str, options):
+def island_rule_1_ok(nucleotide_seq_str):
     '''
     Check if the CpG sites rule #1 is satisfied
     A GC percentage greater than 50% (https://en.wikipedia.org/wiki/CpG_site)
-    '''    
-    gc_percentage_threshold = options['gc_percentage_threshold']
+    '''      
+    if(len(nucleotide_seq_str) == 0):
+        return False
+    
+    default_value = 50
+    gc_percentage_threshold = OPTIONS_DICT['gc_percentage_threshold'] or default_value
     
     sample_seq_length = len(nucleotide_seq_str)
     g_nucleotides_count = nucleotide_seq_str.count('G')
@@ -120,15 +115,17 @@ def island_rule_1_ok(nucleotide_seq_str, options):
     return False
 
 
-def island_rule_2_ok(nucleotide_seq_str, options):
+def island_rule_2_ok(nucleotide_seq_str):
     '''
     Check if the CpG sites rule #2 is satisfied
     An observed-to-expected CpG ratio greater than 60 % 
     (https://en.wikipedia.org/wiki/CpG_site)
     '''    
-    cpg_ratio_threshold = options['cpg_ratio_threshold']
+    default_value = 60
     
-    gc_pairs_obs = nucleotide_seq_str.count('GC')
+    cpg_ratio_threshold = OPTIONS_DICT['cpg_ratio_threshold'] or default_value
+    
+    gc_pairs_obs = nucleotide_seq_str.count('CG')
     gc_pairs_exp = (nucleotide_seq_str.count('C') * 
                     nucleotide_seq_str.count('G')) / len(nucleotide_seq_str)
     if(gc_pairs_exp == 0):
@@ -142,39 +139,66 @@ def island_rule_2_ok(nucleotide_seq_str, options):
     return False
 
 
-def island_conditions_ok(seq, options):
+def island_conditions_ok(seq):
     '''
     Check if island conditions are met
     '''
-    return (island_rule_1_ok(seq, options) and island_rule_2_ok(seq, options))
+    
+    
+    return (island_rule_1_ok(seq) and island_rule_2_ok(seq))
 
 
-def find_islands(nucleotide_seq, options):
+def compare_cpg_islands():
+    print('*****************************************************************')
+    print('compare_cpg_islands')
+    
+    
+    print('*****************************************************************')
+
+
+def find_islands(nucleotide_seq):
     '''
     Find CpG islands from the given nucleotide sequence
     
-    '''    
-    cpg_islands_list = []
-    SAMPLE_LENGTH = options['sample_window_size']
+    '''  
+    default_window = 200
+    SAMPLE_LENGTH = OPTIONS_DICT['sample_window_size'] or default_window
     start_index = 0
     end_index = SAMPLE_LENGTH
     sample_seq = nucleotide_seq[start_index:end_index]
+    cpg_islands_list = []
+    genome_length = len(nucleotide_seq)
+    
+    print('genome_length: ', genome_length)
      
-    while(len(sample_seq) >= SAMPLE_LENGTH):
-        if(island_conditions_ok(sample_seq, options)):
+    while(True):
+        if(island_conditions_ok(sample_seq)):
             end_index = end_index + 1
+            if(end_index > genome_length):
+                cpg_islands_list.append((start_index, end_index-1))
+                print('break 1:', end_index)
+                break
+            
             sample_seq = nucleotide_seq[start_index:end_index]
         else:
             if(len(sample_seq) == SAMPLE_LENGTH):
+                # no island in default sample, lets move on
                 start_index = start_index + 1
                 end_index = start_index + SAMPLE_LENGTH
+                if(end_index > genome_length):
+                    print('break 2:', end_index)
+                    break
+                
                 sample_seq = nucleotide_seq[start_index:end_index]
             else:
-                cpg_islands_list.append(sample_seq)
-                start_index = end_index
+                cpg_islands_list.append((start_index, end_index))
+                start_index = start_index + 1 # move start index by one
                 end_index = start_index + SAMPLE_LENGTH
+                if(end_index > genome_length):
+                    print('break 3:', end_index)
+                    break
                 sample_seq = nucleotide_seq[start_index:end_index]
-            
+                
     return cpg_islands_list
     
     
@@ -182,34 +206,38 @@ def start():
     '''
     The main thing.
     '''
-    test_fasta_file = 'SH1_genome.fasta'
-    options = read_command_line_arguments()
+    global OPTIONS_DICT 
+    OPTIONS_DICT= read_command_line_arguments()
     
     organism1 = input(TEXTS_DICT['organism_input_1'])
     organism2 = input(TEXTS_DICT['organism_input_2'])
     email = input(TEXTS_DICT['email_input'])
-    islands_org1 = []
-    islands_org2 = []
-    islands_test = []
+    islands_list_1 = []
+    islands_list_2 = []
+    islands_test_list = []
     
-    if(organism1 == 'testing'):
-        islands_test = find_islands(parse_genome_from_fasta_file(
-                read_fasta_file_from_filesystem(test_fasta_file)), options)
+    if(organism1 == 'test'):
+        islands_test_list = find_islands(read_test_fasta_file_from_filesystem())
     elif(organism1 is not '' and email is not ''):
-        islands_org1 = find_islands(parse_genome_from_fasta_file(
-                read_fasta_file_from_the_internet(organism1, email)), options)
+        islands_list_1 = find_islands(read_fasta_file_from_the_internet(
+                organism1, email))
         if(organism2 is not ''):
-            islands_org2 = find_islands(parse_genome_from_fasta_file(
-                    read_fasta_file_from_the_internet(organism2, email)), options)
+            islands_list_2 = find_islands(read_fasta_file_from_the_internet(
+                    organism2, email))
     else:
         if(organism1 is ''):
             print(TEXTS_DICT['empty_organism_input'])
         if(email is ''):
             print(TEXTS_DICT['empty_email_input'])
              
-    print('islands found:', islands_org1) 
+    print('islands for test found:', islands_test_list)
+    print('islands for 1 found:', islands_list_1)
+    print('islands for 2 found:', islands_list_2)
 
-    # TODO: compare CpG-islands if two genomes were given 
+    # TODO: compare CpG-islands if two genomes were given
+    #if (islands_org1 and islands_org2):
+        
+        
     
     # TODO: visualize CpG-islands in genome
 
