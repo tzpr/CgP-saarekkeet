@@ -25,7 +25,7 @@ def read_command_line_arguments():
     options_dict = {}
     # initialize options_dict with default values
     options_dict['sample_window_size'] = 200
-    options_dict['gc_percentage_threshold'] = 70
+    options_dict['gc_percentage_threshold'] = 50
     options_dict['cpg_ratio_threshold'] = 60
 
     # https://docs.python.org/2/library/optparse.html
@@ -143,16 +143,33 @@ def island_conditions_ok(seq):
     '''
     Check if island conditions are met
     '''
-    
-    
     return (island_rule_1_ok(seq) and island_rule_2_ok(seq))
 
 
-def compare_cpg_islands():
+def print_comparison_of_cpg_islands(islands_list_1, islands_list_2):
+    '''
+    Some comparison between two genomes
+     
+    Lists is constructed in a following way:
+    
+    list[0] first elements contains the full sequence of the genome
+    list[1]...[n] contain the possible CpG islands (tuples containing islands
+                  start and end indexes )
+    list[n+1] the last element contains the name of the organism
+    
+    '''
+    
     print('*****************************************************************')
-    print('compare_cpg_islands')
-    
-    
+    print('')
+    print('Comparison of CpG islands in ', islands_list_1[-1], 'and', islands_list_2[-1])
+    print('')
+    print('Organism: ', islands_list_1[-1])  
+    print('Number of possible CpG islands: ', len(islands_list_1[1:-1]))
+    print('')
+    print('Organism: ', islands_list_2[-1])  
+    print('Number of possible CpG islands: ', len(islands_list_2[1:-1]))
+    print('')
+    print('')
     print('*****************************************************************')
 
 
@@ -168,6 +185,8 @@ def find_islands(nucleotide_seq):
     sample_seq = nucleotide_seq[start_index:end_index]
     cpg_islands_list = []
     genome_length = len(nucleotide_seq)
+    # let's put the original sequence first
+    cpg_islands_list.append(nucleotide_seq)
     
     print('genome_length: ', genome_length)
      
@@ -200,6 +219,38 @@ def find_islands(nucleotide_seq):
                 sample_seq = nucleotide_seq[start_index:end_index]
                 
     return cpg_islands_list
+
+
+def two_genomes(islands_list_1, islands_list_2):
+    '''
+    Return true if both genomes contain islands
+    
+    '''
+    return (len(islands_list_1) >= 2 and len(islands_list_2 >= 2))
+
+
+def do_visuals(island_list):
+    '''
+    Show some visualization of the CpG data
+    
+    '''
+    if(len(island_list) < 3):
+        return
+    
+    print('visualization...')
+    print('Organism: ', island_list[-1])
+    
+
+def print_island_details(island_list):
+    '''
+    Print some details of the data
+    
+    '''
+    if(len(island_list) < 2):
+        return
+    
+    print('Organism: ', island_list[-1])
+    print('Number of possible CpG islands: ', len(island_list[1:-1]))
     
     
 def start():
@@ -209,37 +260,47 @@ def start():
     global OPTIONS_DICT 
     OPTIONS_DICT= read_command_line_arguments()
     
-    organism1 = input(TEXTS_DICT['organism_input_1'])
-    organism2 = input(TEXTS_DICT['organism_input_2'])
+    organism1_id = input(TEXTS_DICT['organism_input_1'])
+    organism2_id = input(TEXTS_DICT['organism_input_2'])
     email = input(TEXTS_DICT['email_input'])
     islands_list_1 = []
     islands_list_2 = []
     islands_test_list = []
     
-    if(organism1 == 'test'):
+    if(organism1_id == 'test'):
         islands_test_list = find_islands(read_test_fasta_file_from_filesystem())
-    elif(organism1 is not '' and email is not ''):
+        islands_test_list.append('SH1')
+    elif(organism1_id is not '' and email is not ''):
         islands_list_1 = find_islands(read_fasta_file_from_the_internet(
-                organism1, email))
-        if(organism2 is not ''):
+                organism1_id, email))
+        islands_list_1.append(organism1_id)
+        if(organism2_id is not ''):
             islands_list_2 = find_islands(read_fasta_file_from_the_internet(
-                    organism2, email))
+                    organism2_id, email))
+            islands_list_2.append(organism2_id)
     else:
-        if(organism1 is ''):
+        if(organism1_id is ''):
             print(TEXTS_DICT['empty_organism_input'])
         if(email is ''):
             print(TEXTS_DICT['empty_email_input'])
              
-    print('islands for test found:', islands_test_list)
-    print('islands for 1 found:', islands_list_1)
-    print('islands for 2 found:', islands_list_2)
+    #print('islands for test found:', islands_test_list)
+    #print('islands for 1 found:', islands_list_1)
+    #print('islands for 2 found:', islands_list_2)
+    
+    print_island_details(islands_test_list)
 
     # TODO: compare CpG-islands if two genomes were given
-    #if (islands_org1 and islands_org2):
-        
-        
+    if(two_genomes(islands_list_1, islands_list_2)):
+        print_comparison_of_cpg_islands(islands_list_1, islands_list_2)
+    else:
+        print_island_details(islands_list_1)
     
-    # TODO: visualize CpG-islands in genome
+        
+    # TODO: visualize CpG-islands
+    do_visuals(islands_test_list)
+    do_visuals(islands_list_1)
+    do_visuals(islands_list_2)
 
 
 # guard to only execute code when a file is invoked as a script
