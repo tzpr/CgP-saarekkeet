@@ -6,6 +6,8 @@ Ohjelma etsii annetusta genomista CpG-saarekkeita.
 
 ### Aiheeseen liittyviä linkkejä
 
+- http://biopython.org/DIST/docs/api/Bio.Entrez-module.html
+- http://www.bioinformatics.org/sms2/cpg_islands.html
 - https://en.wikipedia.org/wiki/CpG_site
 - https://docs.anaconda.com/anaconda/
 - https://pythonhosted.org/spyder/
