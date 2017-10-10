@@ -15,29 +15,41 @@ TEXTS_DICT = {
     'empty_organism_input': 'Anna jokin eliö!',
     'empty_email_input': 'Sähköpostiosoite tarvitaan internet-hakuun!'
 }
-
+# global variable that holds command options
 OPTIONS_DICT = {}
 
 
 def read_command_line_arguments():
-    ''' Read and store predefined optional commandline arguments. Uses
-        optparse module. '''
+    ''' 
+    Read and store predefined optional commandline arguments. Uses
+    optparse module. 
+    Available options: 
+        -s (sample window size, default value 200 nukleotides)
+        -p (GC persentage, default value 0,5)
+        -r (CpG ratio, default value 0,6)
+        -h (Help)
+        -g (Show graphics of the results, default value is 0, no graphics)
+        
+    '''
     options_dict = {}
     # initialize options_dict with default values
     options_dict['sample_window_size'] = 200
     options_dict['gc_percentage_threshold'] = 50
     options_dict['cpg_ratio_threshold'] = 60
+    options_dict['result_graphics'] = 0
 
     # https://docs.python.org/2/library/optparse.html
     parser = OptionParser()
     parser.add_option('-s', '--size', dest='sample_window_size',
                       help='set the sample window size.', type=int)
     parser.add_option('-p', '--gcp', dest='gc_percentage',
-                      help='set the maximum time for the answer.', type=int)
+                      help='set the GC persentage treshold.', type=int)
     parser.add_option('-r', '--ratio', dest='cpg_ratio',
-                      help='set the number of computer players. ' +
+                      help='set the CpG ratio. ' +
                       'Note: computer players continue the game till the end! ',
                       type=int)
+    parser.add_option('-g', '--graph', dest='show_graphics',
+                      help='activate graphics.', type=int)
     # get the options, discard the leftover arguments with _
     (options, _) = parser.parse_args()
 
@@ -49,6 +61,9 @@ def read_command_line_arguments():
 
     if options.cpg_ratio is not None:
         options_dict['cpg_ratio_threshold'] = options.cpg_ratio
+        
+    if options.show_graphics is not None:
+        options_dict['result_graphics'] = options.show_graphics    
 
     return options_dict
 
@@ -161,7 +176,8 @@ def print_comparison_of_cpg_islands(islands_list_1, islands_list_2):
     
     print('*****************************************************************')
     print('')
-    print('Comparison of CpG islands in ', islands_list_1[-1], 'and', islands_list_2[-1])
+    print('Comparison of CpG islands in ', islands_list_1[-1], 'and', 
+          islands_list_2[-1])
     print('')
     print('Organism: ', islands_list_1[-1])  
     print('Number of possible CpG islands: ', len(islands_list_1[1:-1]))
@@ -185,7 +201,7 @@ def find_islands(nucleotide_seq):
     sample_seq = nucleotide_seq[start_index:end_index]
     cpg_islands_list = []
     genome_length = len(nucleotide_seq)
-    # let's put the original sequence first
+    # let's put the original genome sequence first
     cpg_islands_list.append(nucleotide_seq)
     
     print('genome_length: ', genome_length)
@@ -255,7 +271,22 @@ def print_island_details(island_list):
     
 def start():
     '''
-    The main thing.
+    The main thing. Asks user input.
+    
+    If user gives "test" as the name of the organism then test fasta file is 
+    used in island search.
+    
+    If user gives some other name then organism's genome sequence is fetched
+    from the internet and used in the island search.
+    
+    The organism 1 is mandatory and also email if not "test" given as name.
+    The organism 2 is optional. 
+    
+    If both organism are given then the results are compared in the end. 
+    
+    Some visualizations are shown if user has activated the graphics using
+    options.
+    
     '''
     global OPTIONS_DICT 
     OPTIONS_DICT= read_command_line_arguments()
@@ -298,9 +329,10 @@ def start():
     
         
     # TODO: visualize CpG-islands
-    do_visuals(islands_test_list)
-    do_visuals(islands_list_1)
-    do_visuals(islands_list_2)
+    if(OPTIONS_DICT['result_graphics'] == 1):
+        do_visuals(islands_test_list)
+        do_visuals(islands_list_1)
+        do_visuals(islands_list_2)
 
 
 # guard to only execute code when a file is invoked as a script
