@@ -13,11 +13,94 @@ TEXTS_DICT = {
     'organism_input_2': 'Anna eliö 2: ',
     'email_input': 'Anna email: ',
     'empty_organism_input': 'Anna jokin eliö!',
-    'empty_email_input': 'Sähköpostiosoite tarvitaan internet-hakuun!'
+    'empty_email_input': 'Sähköpostiosoite tarvitaan!'
 }
 # global variable that holds command options
 OPTIONS_DICT = {}
 
+
+class ResearchSubject:
+    name = ''
+    genome_sequence = ''
+    cpg_islands = [] # list holding indexes of found islands
+    cpg_ratio_threshold = 0
+    gc_percentage_threshold = 0
+    researcher_email = ''
+    
+    
+    def populateSubjectFromInput(self):
+        self.name = input('Anna tutkittavan eliön nimi (tai Q niinkuin quit): ')
+        
+        if self.name == 'Q':
+            return
+        if self.name == '' or self.name == None:
+            raise Exception('Eliön nimi tarvitaan!')
+        
+        self.researcher_email = input('Anna sähköposti: ')
+        
+        if self.researcher_email == None or self.researcher_email == '':
+            raise Exception('Email tarvitaan!')
+        
+        # get the genomes
+        if self.name == 'test':
+            self.genome_sequence = self.__read_test_fasta_file_from_filesystem()
+            self.name = 'SH1' # this is the name of the test subject
+        else:
+            self.genome_sequence = self.__read_fasta_file_from_the_internet(
+                    self.name, self.researcher_email)
+            
+                
+    def genome(self):
+        return self.genome_sequence 
+    
+    
+    def set_cpg_ratio_threshold(self, cpg_ratio):
+        self.cpg_ratio_threshold = ratio
+        
+        
+    def set_gc_percentage_threshold(self, gc_percentage):  
+        self.gc_percentage_threshold = gc_percentage
+        
+        
+    def cpg_ratio_threshold(self):
+        return self.cpg_ratio_threshold
+        
+        
+    def gc_percentage_threshold(self):  
+        return self.gc_percentage_threshold   
+      
+            
+    def __read_test_fasta_file_from_filesystem(self):
+        '''
+        Mainly for testing purposes.
+        '''
+        dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
+        
+        test_fasta_file = 'SH1_genome.fasta'
+        genome_seq = []
+        
+        with open(test_fasta_file) as f: 
+            header_line = f.readline()
+            for line in f: 
+                genome_seq.append(line.strip())
+        
+        return ''.join(genome_seq) 
+    
+
+    def __read_fasta_file_from_the_internet(self, organism_name, email):
+        '''
+        Try to find genome for given organism from the internet in a fasta format.
+        (http://biopython.org/DIST/docs/api/Bio.Entrez-module.html)
+        
+        '''   
+        Bio.Entrez.email = email
+        handle = Bio.Entrez.efetch(db="nucleotide", rettype="gb", retmode="text", 
+                                   id=organism_name)
+        seq_record = Bio.SeqIO.read(handle, "gb")
+        handle.close()
+    
+        return seq_record.seq       
+            
 
 def read_command_line_arguments():
     ''' 
@@ -67,43 +150,6 @@ def read_command_line_arguments():
 
     return options_dict
 
-
-def read_fasta_file_from_the_internet(organism_name, email):
-    '''
-    Try to find genome for given organism from the internet in a fasta format.
-    (http://biopython.org/DIST/docs/api/Bio.Entrez-module.html)
-    
-    '''
-    
-    Bio.Entrez.email = email
-    handle = Bio.Entrez.efetch(db="nucleotide", rettype="gb", retmode="text", 
-                               id=organism_name)
-    seq_record = Bio.SeqIO.read(handle, "gb")
-    handle.close()
-    #print("Genbank ID:", seq_record.id)
-    #print("Annotations:", seq_record.annotations)
-    #print("Features:", seq_record.features)
-    #print("Sekvenssi:", seq_record.format("fasta"))
-
-    return seq_record.seq
-    
-
-def read_test_fasta_file_from_filesystem():
-    '''
-    Mainly for testing purposes.
-    '''
-    dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
-    
-    test_fasta_file = 'SH1_genome.fasta'
-    genome_seq = []
-    
-    with open(test_fasta_file) as f: 
-        header_line = f.readline()
-        for line in f: 
-            genome_seq.append(line.strip())
-    
-    return ''.join(genome_seq)
-    
 
 def island_rule_1_ok(nucleotide_seq_str):
     '''
@@ -189,11 +235,12 @@ def print_comparison_of_cpg_islands(islands_list_1, islands_list_2):
     print('*****************************************************************')
 
 
-def find_islands(nucleotide_seq):
+def find_islands(subject):
     '''
     Find CpG islands from the given nucleotide sequence
     
     '''  
+    nucleotide_seq = subject.genome()
     default_window = 200
     SAMPLE_LENGTH = OPTIONS_DICT['sample_window_size'] or default_window
     start_index = 0
@@ -236,37 +283,37 @@ def find_islands(nucleotide_seq):
                 
     return cpg_islands_list
 
+    
+def create_study_subjects():
+    subjects = []
+    
+    while 1:
+        subject = ResearchSubject()
+        subject.populateSubjectFromInput()
+	   
+        if subject.name == 'Q':
+            break
 
-def two_genomes(islands_list_1, islands_list_2):
+        subjects.append(subject)
+       
+    return subjects
+     
+        
+def search_islands(subjects):
     '''
-    Return true if both genomes contain islands
+    Gets list of organisms whos genomes are studied for islands
     
     '''
-    return (len(islands_list_1) >= 2 and len(islands_list_2 >= 2))
-
-
-def do_visuals(island_list):
-    '''
-    Show some visualization of the CpG data
+    for subject in subjects:
+        find_islands(subject)
     
-    '''
-    if(len(island_list) < 3):
-        return
     
-    print('visualization...')
-    print('Organism: ', island_list[-1])
+def visualize_results(subject_list):
+    print('visualize_results NOT IMPLEMENTED YET')
     
-
-def print_island_details(island_list):
-    '''
-    Print some details of the data
     
-    '''
-    if(len(island_list) < 2):
-        return
-    
-    print('Organism: ', island_list[-1])
-    print('Number of possible CpG islands: ', len(island_list[1:-1]))
+def compare_results(subject_list):
+    print('compare_results NOT IMPLEMENTED YET')
     
     
 def start():
@@ -291,48 +338,15 @@ def start():
     global OPTIONS_DICT 
     OPTIONS_DICT= read_command_line_arguments()
     
-    organism1_id = input(TEXTS_DICT['organism_input_1'])
-    organism2_id = input(TEXTS_DICT['organism_input_2'])
-    email = input(TEXTS_DICT['email_input'])
-    islands_list_1 = []
-    islands_list_2 = []
-    islands_test_list = []
+    subjects = []
     
-    if(organism1_id == 'test'):
-        islands_test_list = find_islands(read_test_fasta_file_from_filesystem())
-        islands_test_list.append('SH1')
-    elif(organism1_id is not '' and email is not ''):
-        islands_list_1 = find_islands(read_fasta_file_from_the_internet(
-                organism1_id, email))
-        islands_list_1.append(organism1_id)
-        if(organism2_id is not ''):
-            islands_list_2 = find_islands(read_fasta_file_from_the_internet(
-                    organism2_id, email))
-            islands_list_2.append(organism2_id)
-    else:
-        if(organism1_id is ''):
-            print(TEXTS_DICT['empty_organism_input'])
-        if(email is ''):
-            print(TEXTS_DICT['empty_email_input'])
-             
-    #print('islands for test found:', islands_test_list)
-    #print('islands for 1 found:', islands_list_1)
-    #print('islands for 2 found:', islands_list_2)
+    subjects = create_study_subjects()
     
-    print_island_details(islands_test_list)
+    search_islands(subjects)
+    
+    compare_results(subjects)
 
-    # TODO: compare CpG-islands if two genomes were given
-    if(two_genomes(islands_list_1, islands_list_2)):
-        print_comparison_of_cpg_islands(islands_list_1, islands_list_2)
-    else:
-        print_island_details(islands_list_1)
-    
-        
-    # TODO: visualize CpG-islands
-    if(OPTIONS_DICT['result_graphics'] == 1):
-        do_visuals(islands_test_list)
-        do_visuals(islands_list_1)
-        do_visuals(islands_list_2)
+    visualize_results(subjects)
 
 
 # guard to only execute code when a file is invoked as a script
