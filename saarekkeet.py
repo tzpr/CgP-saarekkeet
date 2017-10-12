@@ -22,7 +22,8 @@ OPTIONS_DICT = {}
 class ResearchSubject:
     name = ''
     genome_sequence = ''
-    cpg_islands = [] # list holding indexes of found islands
+    cpg_islands = [] # list holding indexes of found islands and maybe the calculated values of 
+                     # cpg_ratio and gc_percentage per island
     cpg_ratio_threshold = 0
     gc_percentage_threshold = 0
     researcher_email = ''
