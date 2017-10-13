@@ -9,7 +9,7 @@ ENV_NAME=env-saarekkeet
 
 #######################################
 # Add created virtual env folder to 
-# .gitignore file.
+# .gitignore file if not already present.
 # Globals:
 #   ENV_NAME
 # Arguments:
@@ -18,7 +18,9 @@ ENV_NAME=env-saarekkeet
 #   None
 #######################################
 git_ignore_env() {
-    echo $ENV_NAME >> .gitignore 
+    if ! grep -q ${ENV_NAME} .gitignore; then
+        echo $ENV_NAME >> .gitignore
+    fi
 }
 
 
@@ -73,7 +75,8 @@ install_modules() {
 #######################################
 create_env() {
     echo "* Creating $ENV_NAME..."
-    python3 -m venv ${ENV_NAME}
+    #python3 -m venv ${ENV_NAME}
+    virtualenv ${ENV_NAME}
 }
 
 
