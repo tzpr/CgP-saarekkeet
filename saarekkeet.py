@@ -13,6 +13,7 @@ class ResearchSubject:
                      # cpg_ratio and gc_percentage per island
     cpg_ratio_threshold = 0
     gc_percentage_threshold = 0
+    window_size = 0
     researcher_email = ''
     
     def populateSubjectFromInput(self):
@@ -37,24 +38,40 @@ class ResearchSubject:
                     self.name, self.researcher_email)
             
                 
-    def genome(self):
+    def get_genome(self):
         return self.genome_sequence 
     
+
+    def set_window_size(self, size):
+        self.window_size = size
+
     
     def set_cpg_ratio_threshold(self, cpg_ratio):
-        self.cpg_ratio_threshold = ratio
+        self.cpg_ratio_threshold = cpg_ratio
         
         
     def set_gc_percentage_threshold(self, gc_percentage):  
         self.gc_percentage_threshold = gc_percentage
         
         
-    def cpg_ratio_threshold(self):
+    def get_cpg_ratio_threshold(self):
         return self.cpg_ratio_threshold
         
         
-    def gc_percentage_threshold(self):  
-        return self.gc_percentage_threshold   
+    def get_gc_percentage_threshold(self):  
+        return self.gc_percentage_threshold  
+
+    def get_window_size(self):
+        return self.window_size 
+
+    def get_genome_length(self):
+        return len(self.genome_sequence)
+
+    def set_cpg_islands(self, islands):
+        self.cpg_islands = islands
+
+    def get_cpg_islands(self):
+        return self.cpg_islands  
       
             
     def __read_test_fasta_file_from_filesystem(self):
@@ -89,16 +106,14 @@ class ResearchSubject:
         return seq_record.seq       
 
 
-def island_rule_1_ok(nucleotide_seq_str):
+def island_rule_1_ok(subject):
     '''
     Check if the CpG sites rule #1 is satisfied
     A GC percentage greater than 50% (https://en.wikipedia.org/wiki/CpG_site)
     '''      
-    if(len(nucleotide_seq_str) == 0):
-        return False
-    
+    nucleotide_seq_str = subject.get_genome()
     default_value = 50
-    gc_percentage_threshold = OPTIONS_DICT['gc_percentage_threshold'] or default_value
+    gc_percentage_threshold = subject.get_gc_percentage_threshold()
     
     sample_seq_length = len(nucleotide_seq_str)
     g_nucleotides_count = nucleotide_seq_str.count('G')
@@ -108,21 +123,23 @@ def island_rule_1_ok(nucleotide_seq_str):
     c_percentage = (c_nucleotides_count/sample_seq_length) * 100
     gc_percentage = g_percentage + c_percentage
     
-    if(gc_percentage >= gc_percentage_threshold):
+    if(int(gc_percentage) >= int(gc_percentage_threshold)):
         return True
     
     return False
 
 
-def island_rule_2_ok(nucleotide_seq_str):
+def island_rule_2_ok(subject):
     '''
     Check if the CpG sites rule #2 is satisfied
     An observed-to-expected CpG ratio greater than 60 % 
     (https://en.wikipedia.org/wiki/CpG_site)
     '''    
     default_value = 60
+
+    nucleotide_seq_str = subject.get_genome()
     
-    cpg_ratio_threshold = OPTIONS_DICT['cpg_ratio_threshold'] or default_value
+    cpg_ratio_threshold = subject.get_cpg_ratio_threshold()
     
     gc_pairs_obs = nucleotide_seq_str.count('CG')
     gc_pairs_exp = (nucleotide_seq_str.count('C') * 
@@ -132,17 +149,17 @@ def island_rule_2_ok(nucleotide_seq_str):
     
     cpg_ratio = (gc_pairs_obs/gc_pairs_exp) * 100
     
-    if(cpg_ratio > cpg_ratio_threshold):
+    if(int(cpg_ratio) > int(cpg_ratio_threshold)):
         return True
     
     return False
 
 
-def island_conditions_ok(seq):
+def island_conditions_ok(subject):
     '''
     Check if island conditions are met
     '''
-    return (island_rule_1_ok(seq) and island_rule_2_ok(seq))
+    return (island_rule_1_ok(subject) and island_rule_2_ok(subject))
 
 
 def print_comparison_of_cpg_islands(islands_list_1, islands_list_2):
@@ -178,21 +195,24 @@ def find_islands(subject):
     Find CpG islands from the given nucleotide sequence
     
     '''  
-    nucleotide_seq = subject.genome()
+    nucleotide_seq = subject.get_genome()
+    print("DADADADAAADAAA 1", nucleotide_seq)
     default_window = 200
-    SAMPLE_LENGTH = OPTIONS_DICT['sample_window_size'] or default_window
+    SAMPLE_LENGTH = int(subject.get_window_size())
+    print("DADADADAAADAAA 2", SAMPLE_LENGTH)
     start_index = 0
     end_index = SAMPLE_LENGTH
     sample_seq = nucleotide_seq[start_index:end_index]
     cpg_islands_list = []
-    genome_length = len(nucleotide_seq)
+    genome_length = subject.get_genome_length()
     # let's put the original genome sequence first
     cpg_islands_list.append(nucleotide_seq)
     
     print('genome_length: ', genome_length)
      
     while(True):
-        if(island_conditions_ok(sample_seq)):
+        # this could take the subject
+        if(island_conditions_ok(subject)):
             end_index = end_index + 1
             if(end_index > genome_length):
                 cpg_islands_list.append((start_index, end_index-1))
@@ -219,7 +239,9 @@ def find_islands(subject):
                     break
                 sample_seq = nucleotide_seq[start_index:end_index]
                 
-    return cpg_islands_list
+    subject.set_cpg_islands(cpg_islands_list)
+
+    #return cpg_islands_list
 
     
 def create_study_subjects(window_size, gc, cgp):
@@ -231,6 +253,10 @@ def create_study_subjects(window_size, gc, cgp):
 	   
         if subject.name == 'Q':
             break
+
+        subject.set_cpg_ratio_threshold(cgp)
+        subject.set_gc_percentage_threshold(gc)
+        subject.set_window_size(window_size)
 
         subjects.append(subject)
        
@@ -247,11 +273,13 @@ def search_islands(subjects):
     
     
 def visualize_results(subject_list):
-    print('visualize_results NOT IMPLEMENTED YET')
+    for subject in subject_list:
+        print('visualize_results NOT IMPLEMENTED YET', len(subject.get_cpg_islands()))
 
     
 def compare_results(subject_list):
-    print('compare_results NOT IMPLEMENTED YET')
+    for subject in subject_list:
+        print('compare_results NOT IMPLEMENTED YET', len(subject.get_cpg_islands()))
     
 
 def start():
@@ -261,9 +289,9 @@ def start():
     '''
     subjects = []
 
-    sample_window_size = input('Anna koeikkunan aloituskoko: ') || 200
-    gc_percentage_threshold = input('GC-pitoisuuden raja-arvo: ') || 50
-    cpg_ratio_threshold = input('CpG-suhteen raja-arvo: ') || 60
+    sample_window_size = input('Anna koeikkunan aloituskoko: ') or 200
+    gc_percentage_threshold = input('GC-pitoisuuden raja-arvo: ') or 50
+    cpg_ratio_threshold = input('CpG-suhteen raja-arvo: ') or 60
 
     subjects = create_study_subjects(sample_window_size, gc_percentage_threshold, cpg_ratio_threshold)
     
