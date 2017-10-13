@@ -246,6 +246,8 @@ def find_islands(subject):
     
 def create_study_subjects(window_size, gc, cgp):
     subjects = []
+
+    print('Anna tutkittavan genomin nimi, syötä nimeksi "test" jos haluat testata SH1 genomilla.')
     
     while 1:
         subject = ResearchSubject()
@@ -289,10 +291,10 @@ def start():
     '''
     subjects = []
 
-    sample_window_size = input('Anna koeikkunan aloituskoko: ') or 200
-    gc_percentage_threshold = input('GC-pitoisuuden raja-arvo: ') or 50
-    cpg_ratio_threshold = input('CpG-suhteen raja-arvo: ') or 60
-
+    sample_window_size = input('Anna koeikkunan aloituskoko (default 200):') or 200
+    gc_percentage_threshold = input('GC-pitoisuuden raja-arvo (default 50):') or 50
+    cpg_ratio_threshold = input('CpG-suhteen raja-arvo (default 60):') or 60
+    print('Anna nimeksi "test" jos haluat testata SH1_genome.fasta tiedostolla')
     subjects = create_study_subjects(sample_window_size, gc_percentage_threshold, cpg_ratio_threshold)
     
     search_islands(subjects)
