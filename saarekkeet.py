@@ -6,19 +6,6 @@ import Bio.SeqIO
 from optparse import OptionParser  # obs! deprecated module (but good for now)
 
 
-
-# global variable that holds the messages shown to user
-TEXTS_DICT = {
-    'organism_input_1': 'Anna eliö 1: ',
-    'organism_input_2': 'Anna eliö 2: ',
-    'email_input': 'Anna email: ',
-    'empty_organism_input': 'Anna jokin eliö!',
-    'empty_email_input': 'Sähköpostiosoite tarvitaan!'
-}
-# global variable that holds command options
-OPTIONS_DICT = {}
-
-
 class ResearchSubject:
     name = ''
     genome_sequence = ''
@@ -27,7 +14,6 @@ class ResearchSubject:
     cpg_ratio_threshold = 0
     gc_percentage_threshold = 0
     researcher_email = ''
-    
     
     def populateSubjectFromInput(self):
         self.name = input('Anna tutkittavan eliön nimi (tai Q niinkuin quit): ')
@@ -101,55 +87,6 @@ class ResearchSubject:
         handle.close()
     
         return seq_record.seq       
-            
-
-def read_command_line_arguments():
-    ''' 
-    Read and store predefined optional commandline arguments. Uses
-    optparse module. 
-    Available options: 
-        -s (sample window size, default value 200 nukleotides)
-        -p (GC persentage, default value 0,5)
-        -r (CpG ratio, default value 0,6)
-        -h (Help)
-        -g (Show graphics of the results, default value is 0, no graphics)
-        
-    '''
-    options_dict = {}
-    # initialize options_dict with default values
-    options_dict['sample_window_size'] = 200
-    options_dict['gc_percentage_threshold'] = 50
-    options_dict['cpg_ratio_threshold'] = 60
-    options_dict['result_graphics'] = 0
-
-    # https://docs.python.org/2/library/optparse.html
-    parser = OptionParser()
-    parser.add_option('-s', '--size', dest='sample_window_size',
-                      help='set the sample window size.', type=int)
-    parser.add_option('-p', '--gcp', dest='gc_percentage',
-                      help='set the GC persentage treshold.', type=int)
-    parser.add_option('-r', '--ratio', dest='cpg_ratio',
-                      help='set the CpG ratio. ' +
-                      'Note: computer players continue the game till the end! ',
-                      type=int)
-    parser.add_option('-g', '--graph', dest='show_graphics',
-                      help='activate graphics.', type=int)
-    # get the options, discard the leftover arguments with _
-    (options, _) = parser.parse_args()
-
-    if options.sample_window_size is not None:
-        options_dict['sample_window_size'] = options.sample_window_size
-
-    if options.gc_percentage is not None:
-        options_dict['gc_percentage_threshold'] = options.gc_percentage
-
-    if options.cpg_ratio is not None:
-        options_dict['cpg_ratio_threshold'] = options.cpg_ratio
-        
-    if options.show_graphics is not None:
-        options_dict['result_graphics'] = options.show_graphics    
-
-    return options_dict
 
 
 def island_rule_1_ok(nucleotide_seq_str):
@@ -285,7 +222,7 @@ def find_islands(subject):
     return cpg_islands_list
 
     
-def create_study_subjects():
+def create_study_subjects(window_size, gc, cgp):
     subjects = []
     
     while 1:
@@ -311,37 +248,24 @@ def search_islands(subjects):
     
 def visualize_results(subject_list):
     print('visualize_results NOT IMPLEMENTED YET')
-    
+
     
 def compare_results(subject_list):
     print('compare_results NOT IMPLEMENTED YET')
     
-    
+
 def start():
     '''
     The main thing. Asks user input.
     
-    If user gives "test" as the name of the organism then test fasta file is 
-    used in island search.
-    
-    If user gives some other name then organism's genome sequence is fetched
-    from the internet and used in the island search.
-    
-    The organism 1 is mandatory and also email if not "test" given as name.
-    The organism 2 is optional. 
-    
-    If both organism are given then the results are compared in the end. 
-    
-    Some visualizations are shown if user has activated the graphics using
-    options.
-    
     '''
-    global OPTIONS_DICT 
-    OPTIONS_DICT= read_command_line_arguments()
-    
     subjects = []
-    
-    subjects = create_study_subjects()
+
+    sample_window_size = input('Anna koeikkunan aloituskoko: ') || 200
+    gc_percentage_threshold = input('GC-pitoisuuden raja-arvo: ') || 50
+    cpg_ratio_threshold = input('CpG-suhteen raja-arvo: ') || 60
+
+    subjects = create_study_subjects(sample_window_size, gc_percentage_threshold, cpg_ratio_threshold)
     
     search_islands(subjects)
     
