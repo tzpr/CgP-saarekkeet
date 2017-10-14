@@ -6,6 +6,7 @@ Ohjelma etsii annetusta genomista CpG-saarekkeita.
 
 ### Aiheeseen liittyviä linkkejä
 
+- https://matplotlib.org/examples/api/barchart_demo.html
 - http://biopython.org/DIST/docs/api/Bio.Entrez-module.html
 - http://www.bioinformatics.org/sms2/cpg_islands.html
 - https://en.wikipedia.org/wiki/CpG_site
