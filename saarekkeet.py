@@ -9,14 +9,13 @@ import Bio.Entrez
 import Bio.SeqIO
 
 
-class ResearchSubject:
+class Genome:
     '''
     Genome under research
     '''
     name = ''
     genome_sequence = ''
-    cpg_islands = [] # list holding indexes of found islands and maybe the calculated values of
-                     # cpg_ratio and gc_percentage per island
+    possible_cpg_islands = []
     cpg_ratio_threshold = 0
     gc_percentage_threshold = 0
     window_size = 0
@@ -26,103 +25,119 @@ class ResearchSubject:
         '''
         Populate genome from input
         '''
-        self.name = input('Anna tutkittavan eliön nimi (tai Q niinkuin quit): ')
+        self.name = input('  Tutkittavan eliön nimi (tai Q niinkuin quit): ')
 
         if self.name == 'Q':
             return
         if self.name == '' or self.name is None:
             raise Exception('Eliön nimi tarvitaan!')
 
-        self.researcher_email = input('Anna sähköposti: ')
+        self.researcher_email = input('  Anna sähköposti: ')
 
         if self.researcher_email is None or self.researcher_email == '':
             raise Exception('Email tarvitaan!')
 
         # get the genomes
         if self.name == 'test':
-            self.genome_sequence = self.__read_test_fasta_file_from_filesystem()
+            test_fasta_file = 'SH1_genome.fasta'
+            self.genome_sequence = read_fasta_file_from_filesystem(test_fasta_file)
             self.name = 'SH1' # this is the name of the test subject
         else:
-            self.genome_sequence = self.__read_fasta_file_from_the_internet(
+            self.genome_sequence = get_sequence_from_the_internet(
                 self.name, self.researcher_email)
 
+    def display(self, verbose):
+        ''' Print information of the genome including island search results '''
+        print('')
+        print('Genome Information:')
+        print('- name:', self.name)
+        print('- sequence length:', self.get_genome_length())
+        print('- number of possible CpG islands:', len(self.possible_cpg_islands))
+        print('Search parameters for CpG islands:')
+        print('- window_size:', self.window_size)
+        print('- cpg_ratio_threshold:', self.cpg_ratio_threshold)
+        print('- gc_percentage_threshold:', self.gc_percentage_threshold)
+        print('')
+        if verbose:
+            print('verbose mode, show detailed island info')
+
+    def get_name(self):
+        ''' Return genome name '''
+        return self.name
 
     def get_genome(self):
         ''' Return genome sequence string '''
         return self.genome_sequence
 
-
     def set_window_size(self, size):
         ''' Set the sample window size '''
         self.window_size = size
-
-
-    def set_cpg_ratio_threshold(self, cpg_ratio):
-        ''' Set the CpG ratio '''
-        self.cpg_ratio_threshold = cpg_ratio
-
-
-    def set_gc_percentage_threshold(self, gc_percentage):
-        ''' Set the GC percentage '''
-        self.gc_percentage_threshold = gc_percentage
-
-
-    def get_cpg_ratio_threshold(self):
-        ''' Return Cpg ratio '''
-        return self.cpg_ratio_threshold
-
-
-    def get_gc_percentage_threshold(self):
-        ''' Return GC percentage value '''
-        return self.gc_percentage_threshold
 
     def get_window_size(self):
         ''' Return the sample window size '''
         return self.window_size
 
+    def set_cpg_ratio_threshold(self, cpg_ratio):
+        ''' Set the CpG ratio '''
+        self.cpg_ratio_threshold = cpg_ratio
+
+    def get_cpg_ratio_threshold(self):
+        ''' Return Cpg ratio '''
+        return self.cpg_ratio_threshold
+
+    def set_gc_percentage_threshold(self, gc_percentage):
+        ''' Set the GC percentage '''
+        self.gc_percentage_threshold = gc_percentage
+
+    def get_gc_percentage_threshold(self):
+        ''' Return GC percentage value '''
+        return self.gc_percentage_threshold
+
     def get_genome_length(self):
         ''' Return the length of the genome sequence '''
         return len(self.genome_sequence)
 
+    def set_cpg_island(self, island):
+        ''' Add CpG island to island list '''
+        self.possible_cpg_islands.append(island)
+
     def set_cpg_islands(self, islands):
         ''' Set CpG islands '''
-        self.cpg_islands = islands
+        self.possible_cpg_islands = islands
 
     def get_cpg_islands(self):
         ''' Return Cpg islands list '''
-        return self.cpg_islands
+        return self.possible_cpg_islands
 
 
-    def __read_test_fasta_file_from_filesystem(self):
-        '''
-        Mainly for testing purposes.
-        '''
-        dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
+def read_fasta_file_from_filesystem(file_name):
+    '''
+    Mainly for testing purposes.
+    '''
+    dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
+    genome_seq = []
 
-        test_fasta_file = 'SH1_genome.fasta'
-        genome_seq = []
+    with open(file_name) as fasta:
+        #header_line = f.readline()
+        for line in fasta:
+            genome_seq.append(line.strip())
 
-        with open(test_fasta_file) as fasta:
-            #header_line = f.readline()
-            for line in fasta:
-                genome_seq.append(line.strip())
-
-        return ''.join(genome_seq)
+    return ''.join(genome_seq)
 
 
-    def __read_fasta_file_from_the_internet(self, organism_name, email):
-        '''
-        Try to find genome for given organism from the internet in a fasta format.
-        (http://biopython.org/DIST/docs/api/Bio.Entrez-module.html)
+def get_sequence_from_the_internet(organism_name, email):
+    '''
+    Try to find genome for given organism from the internet in a fasta format.
+    (http://biopython.org/DIST/docs/api/Bio.Entrez-module.html)
 
-        '''
-        Bio.Entrez.email = email
-        handle = Bio.Entrez.efetch(db="nucleotide", rettype="gb", retmode="text",
-                                   id=organism_name)
-        seq_record = Bio.SeqIO.read(handle, "gb")
-        handle.close()
+    '''
+    Bio.Entrez.email = email
+    handle = Bio.Entrez.efetch(db="nucleotide", rettype="gb", retmode="text",
+                               id=organism_name)
+    seq_record = Bio.SeqIO.read(handle, "gb")
+    handle.close()
 
-        return seq_record.seq
+    return seq_record.seq
 
 
 def island_rule_1_ok(subject):
@@ -178,43 +193,15 @@ def island_conditions_ok(subject):
     return island_rule_1_ok(subject) and island_rule_2_ok(subject)
 
 
-def print_comparison_of_cpg_islands(islands_list_1, islands_list_2):
-    '''
-    Some comparison between two genomes
-
-    Lists is constructed in a following way:
-
-    list[0] first elements contains the full sequence of the genome
-    list[1]...[n] contain the possible CpG islands (tuples containing islands
-                  start and end indexes )
-    list[n+1] the last element contains the name of the organism
-
-    '''
-
-    print('*****************************************************************')
-    print('')
-    print('Comparison of CpG islands in ', islands_list_1[-1], 'and',
-          islands_list_2[-1])
-    print('')
-    print('Organism: ', islands_list_1[-1])
-    print('Number of possible CpG islands: ', len(islands_list_1[1:-1]))
-    print('')
-    print('Organism: ', islands_list_2[-1])
-    print('Number of possible CpG islands: ', len(islands_list_2[1:-1]))
-    print('')
-    print('')
-    print('*****************************************************************')
-
-
 def find_islands(subject):
     '''
     Find CpG islands from the given nucleotide sequence
 
     '''
     nucleotide_seq = subject.get_genome()
-    print("DADADADAAADAAA 1", nucleotide_seq)
+    #print("DADADADAAADAAA 1", nucleotide_seq)
     sample_seq_length = int(subject.get_window_size())
-    print("DADADADAAADAAA 2", sample_seq_length)
+    #print("DADADADAAADAAA 2", sample_seq_length)
     start_index = 0
     end_index = sample_seq_length
     sample_seq = nucleotide_seq[start_index:end_index]
@@ -223,7 +210,7 @@ def find_islands(subject):
     # let's put the original genome sequence first
     cpg_islands_list.append(nucleotide_seq)
 
-    print('genome_length: ', genome_length)
+    #print('genome_length: ', genome_length)
 
     while True:
         # this could take the subject
@@ -256,24 +243,22 @@ def find_islands(subject):
 
     subject.set_cpg_islands(cpg_islands_list)
 
-    #return cpg_islands_list
 
-
-def create_study_subjects(window_size, gc, cgp):
+def create_study_subjects(window_size, gc_percentage, cgp_ratio):
     ''' Create genomes  '''
     subjects = []
 
-    print('Anna tutkittavan genomin nimi, syötä nimeksi "test" jos haluat testata SH1 genomilla.')
+    #print('Anna tutkittavan genomin nimi, syötä nimeksi "test" jos haluat testata SH1 genomilla.')
 
     while 1:
-        subject = ResearchSubject()
+        subject = Genome()
         subject.populate_subject_from_input()
 
         if subject.name == 'Q':
             break
 
-        subject.set_cpg_ratio_threshold(cgp)
-        subject.set_gc_percentage_threshold(gc)
+        subject.set_cpg_ratio_threshold(cgp_ratio)
+        subject.set_gc_percentage_threshold(gc_percentage)
         subject.set_window_size(window_size)
 
         subjects.append(subject)
@@ -287,19 +272,23 @@ def search_islands(subjects):
 
     '''
     for subject in subjects:
+        print('')
+        print('')
+        print('*** Etsitään saarekkeita ', subject.get_name(), ' genomille')
+        print('')
         find_islands(subject)
 
 
 def visualize_results(subject_list):
     ''' Visualize results  '''
     for subject in subject_list:
-        print('visualize_results NOT IMPLEMENTED YET', len(subject.get_cpg_islands()))
+        print('visualize_results NOT IMPLEMENTED YET')
 
 
 def compare_results(subject_list):
-    ''' Compare results '''
+    ''' Compare results, displays information of each genome '''
     for subject in subject_list:
-        print('compare_results NOT IMPLEMENTED YET', len(subject.get_cpg_islands()))
+        subject.display(True)
 
 
 def start():
@@ -309,10 +298,18 @@ def start():
     '''
     subjects = []
 
-    sample_window_size = input('Anna koeikkunan aloituskoko (default 200):') or 200
-    gc_percentage_threshold = input('GC-pitoisuuden raja-arvo (default 50):') or 50
-    cpg_ratio_threshold = input('CpG-suhteen raja-arvo (default 60):') or 60
-    print('Anna nimeksi "test" jos haluat testata SH1_genome.fasta tiedostolla')
+    print('')
+    print('--------------------------------------------------------------------')
+    print('Anna saarekkeiden etsintäparametrit, enterillä suoraan default arvot')
+    print('')
+    sample_window_size = input('  Koeikkunan aloituskoko (default 200):') or 200
+    gc_percentage_threshold = input('  GC-pitoisuuden raja-arvo s(default 50):') or 50
+    cpg_ratio_threshold = input('  CpG-suhteen raja-arvo (default 60):') or 60
+    print('')
+    print('--------------------------------------------------------------------')
+    print('Seuraavaksi tutkittavat genomit.')
+    print('Nimellä "test" testataan SH1_genome.fasta tiedostolla')
+    print('')
     subjects = create_study_subjects(
         sample_window_size, gc_percentage_threshold, cpg_ratio_threshold)
 
