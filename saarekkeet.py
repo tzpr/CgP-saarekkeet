@@ -48,7 +48,7 @@ class ResearchSubject:
     researcher_email = ''
     window_size = 0
     cpg_ratio_threshold = 0
-    gc_percentage_threshold = 0
+    cg_percentage_threshold = 0
     possible_cpg_islands = []
     
 
@@ -73,7 +73,7 @@ class ResearchSubject:
         if self.genome_name == 'test':
             test_fasta_file = 'SH1_genome.fasta'
             self.genome_sequence = read_fasta_file_from_filesystem(test_fasta_file)
-            self.genome_name = 'SH1' # name of the test subject
+            self.genome_name = 'SH1'
         else:
             self.researcher_email = input('  Anna sähköposti: ')
             
@@ -98,7 +98,7 @@ class ResearchSubject:
         
         '''
         print('')
-        print('Genomin tietoja:')
+        print('Genomi:')
         print('- nimi:', self.genome_name)
         print('- sekvenssin pituus:', self.get_genome_length())
         print('- mahdollisten CpG-saarekkeiden lkm:', len(self.possible_cpg_islands))
@@ -110,53 +110,54 @@ class ResearchSubject:
                       'start_index:', start_idx, 'end_index:', end_idx, 
                       (calculate_details(self.genome_sequence, start_idx, end_idx)))
                 index = index + 1
+        print('')
 
     def get_name(self):
-        ''' Return genome name '''
+        ''' Palauttaa genomine nimen (tai tunnuksen) '''
         return self.genome_name
 
     def get_genome(self):
-        ''' Return genome sequence string '''
+        ''' Palauttaa genomin nukleotidisekvenssin '''
         return self.genome_sequence
 
     def set_window_size(self, size):
-        ''' Set the sample window size '''
+        ''' Asettaa saarekkeiden etsinnässä käytetyn näyteikkunan aloituskoon '''
         self.window_size = size
 
     def get_window_size(self):
-        ''' Return the sample window size '''
+        ''' Palauttaa näyteikkunan koon '''
         return self.window_size
 
     def set_cpg_ratio_threshold(self, cpg_ratio):
-        ''' Set the CpG ratio '''
+        ''' Asetetaan CpG-parien suhdeluku '''
         self.cpg_ratio_threshold = cpg_ratio
 
     def get_cpg_ratio_threshold(self):
-        ''' Return Cpg ratio '''
+        ''' Palautetaan CpG-parien suhdeluku '''
         return self.cpg_ratio_threshold
 
-    def set_gc_percentage_threshold(self, gc_percentage):
-        ''' Set the GC percentage '''
-        self.gc_percentage_threshold = gc_percentage
+    def set_cg_percentage_threshold(self, cg_percentage):
+        ''' Asetetaan käytetty CG-pitoisuuden raja-arvo '''
+        self.cg_percentage_threshold = cg_percentage
 
-    def get_gc_percentage_threshold(self):
-        ''' Return GC percentage value '''
-        return self.gc_percentage_threshold
+    def get_cg_percentage_threshold(self):
+        ''' Asetetaan käytetty CG-pitoisuuden raja-arvo '''
+        return self.cg_percentage_threshold
 
     def get_genome_length(self):
-        ''' Return the length of the genome sequence '''
+        ''' Palauttaa genomin nukleotidisekvenssin pituuden '''
         return len(self.genome_sequence)
 
     def set_cpg_island(self, island):
-        ''' Add CpG island to island list '''
+        ''' Lisää saarekkeen saarekelistaan '''
         self.possible_cpg_islands.append(island)
 
     def set_cpg_islands(self, islands):
-        ''' Set CpG islands '''
+        ''' Alustaa genomin saarekelistan '''
         self.possible_cpg_islands = islands
 
     def get_cpg_islands(self):
-        ''' Return Cpg islands list '''
+        ''' Palauttaa genomin saarekelistan '''
         return self.possible_cpg_islands
 
 
@@ -172,28 +173,28 @@ def calculate_details(seq, region_start, region_end):
     '''
     
     def obs(nucleotide_seq_str):
-        gc_pairs_obs = nucleotide_seq_str.count('CG')
-        gc_pairs_exp = (nucleotide_seq_str.count('C') * 
+        cg_pairs_obs = nucleotide_seq_str.count('CG')
+        cg_pairs_exp = (nucleotide_seq_str.count('C') * 
                         nucleotide_seq_str.count('G')) / len(nucleotide_seq_str)
 
-        cpg_ratio = (gc_pairs_obs/gc_pairs_exp) * 100
+        cpg_ratio = (cg_pairs_obs/cg_pairs_exp) * 100
         return cpg_ratio
     
-    def gc(nucleotide_seq_str):
+    def cg(nucleotide_seq_str):
         sample_seq_length = len(nucleotide_seq_str)
         g_nucleotides_count = nucleotide_seq_str.count('G')
         c_nucleotides_count = nucleotide_seq_str.count('C')
     
         g_percentage = (g_nucleotides_count/sample_seq_length) * 100
         c_percentage = (c_nucleotides_count/sample_seq_length) * 100
-        gc_percentage = g_percentage + c_percentage
-        return gc_percentage
+        cg_percentage = g_percentage + c_percentage
+        return cg_percentage
     
-    region = seq[region_start:region_end]
+    region = seq[region_start:region_end] # island sequence
     obs = round(obs(region), 2)
-    gc = round(gc(region), 2)
+    cg = round(cg(region), 2)
     
-    return ('(Obs/Exp = ' + str(obs) + ' ja %GC = ' + str(gc) + ')')
+    return ('(Obs/Exp = ' + str(obs) + ' ja %CG = ' + str(cg) + ')')
 
 
 def read_fasta_file_from_filesystem(file_name):
@@ -203,11 +204,9 @@ def read_fasta_file_from_filesystem(file_name):
     Tätä funktiota käytetään testisekvenssin lukemiseen tiedostosta.
     
     '''
-    #dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
     genome_seq = []
 
     with open(file_name) as fasta:
-        #header_line = f.readline()
         for line in fasta:
             genome_seq.append(line.strip())
 
@@ -245,7 +244,7 @@ def island_rule_1_ok(subject, seq):
     
     '''
     nucleotide_seq_str = seq
-    gc_percentage_threshold = subject.get_gc_percentage_threshold()
+    cg_percentage_threshold = subject.get_cg_percentage_threshold()
 
     sample_seq_length = len(nucleotide_seq_str)
     g_nucleotides_count = nucleotide_seq_str.count('G')
@@ -253,9 +252,9 @@ def island_rule_1_ok(subject, seq):
 
     g_percentage = (g_nucleotides_count/sample_seq_length) * 100
     c_percentage = (c_nucleotides_count/sample_seq_length) * 100
-    gc_percentage = g_percentage + c_percentage
+    cg_percentage = g_percentage + c_percentage
 
-    if int(gc_percentage) >= int(gc_percentage_threshold):
+    if int(cg_percentage) >= int(cg_percentage_threshold):
         return True
 
     return False
@@ -282,13 +281,13 @@ def island_rule_2_ok(subject, seq):
 
     cpg_ratio_threshold = subject.get_cpg_ratio_threshold()
 
-    gc_pairs_obs = nucleotide_seq_str.count('CG')
-    gc_pairs_exp = (nucleotide_seq_str.count('C') *
+    cg_pairs_obs = nucleotide_seq_str.count('CG')
+    cg_pairs_exp = (nucleotide_seq_str.count('C') *
                     nucleotide_seq_str.count('G')) / len(nucleotide_seq_str)
-    if gc_pairs_exp == 0:
+    if cg_pairs_exp == 0:
         return False
 
-    cpg_ratio = (gc_pairs_obs/gc_pairs_exp) * 100
+    cpg_ratio = (cg_pairs_obs/cg_pairs_exp) * 100
 
     if int(cpg_ratio) > int(cpg_ratio_threshold):
         return True
@@ -312,51 +311,57 @@ def find_islands(subject):
     genomi on käyty läpi.
 
     '''
+    # genomin nukleotidisekvenssi
     nucleotide_seq = subject.get_genome()
-    sample_seq_length = int(subject.get_window_size())
+    # näytealueen aloituskoko
+    seq_sample_length = int(subject.get_window_size())
+    # näytteen alkuindeksin alkuarvo
     start_index = 0
-    end_index = sample_seq_length
-    sample_seq = nucleotide_seq[start_index:end_index]
+    # näytteen loppuindeksin alkuarvo
+    end_index = seq_sample_length
+    # sekvenssin pala
+    seq_sample = nucleotide_seq[start_index:end_index]
+    # saarekelista
     cpg_islands_list = []
-    genome_length = subject.get_genome_length()
 
     while True:
-        if island_conditions_ok(subject, sample_seq):
+        
+        # otetaan näyte
+        seq_sample = nucleotide_seq[start_index:end_index]
+        
+        # tarkistetaan että näyte on minimipituinen
+        if not len(seq_sample) >= seq_sample_length:
+            break
+        
+        # tarkistetaan täyttääkö näyte saarekkeen ehdot
+        if island_conditions_ok(subject, seq_sample):
+            # jos täyttää siirretään loppuindeksiä yhdellä eteenpäin
             end_index = end_index + 1
-            if end_index > genome_length:
+            # tarkistetaan ollaanko genomin sekvenssin lopussa 
+            if end_index > subject.get_genome_length():
+                # lisätään saareke listaan
                 cpg_islands_list.append((start_index, end_index-1))
-                print('break 1:', end_index)
-                break
-
-            sample_seq = nucleotide_seq[start_index:end_index]
-        else:
-            if len(sample_seq) == sample_seq_length:
-                # no island in default sample, lets move on
+                # siirretään alkuindeksiä yhdellä, samoin loppuindeksiä
                 start_index = start_index + 1
-                end_index = start_index + sample_seq_length
-                if end_index > genome_length:
-                    print('break 2:', end_index)
-                    break
-
-                sample_seq = nucleotide_seq[start_index:end_index]
-            else:
-                if len(sample_seq) >= sample_seq_length:
-                    cpg_islands_list.append((start_index, end_index))
-                    start_index = start_index + 1 # move start index by one
-                    end_index = start_index + sample_seq_length
-                    if end_index > genome_length:
-                        print('break 3:', end_index)
-                        break
-                    sample_seq = nucleotide_seq[start_index:end_index]
-                else:
-                    break
+                end_index = start_index + seq_sample_length
+        else:
+            # saarekkeen ehdot eivät täyttyneet
+            # jos näyte on suurempi kuin näytealueen oletuskoko, otetaan se talteen
+            if len(seq_sample) > seq_sample_length:
+                cpg_islands_list.append((start_index, end_index-1))
+            # kasvatetaan alku- ja loppuindeksejä
+            start_index = start_index + 1
+            end_index = start_index + seq_sample_length
+            # tarkistetaan onko genomin sekvenssiä vielä jäljellä
+            if end_index > subject.get_genome_length():
+                break
 
     subject.set_cpg_islands(cpg_islands_list)
 
 
 def create_study_subjects(window_size, gc_percentage, cgp_ratio):
     ''' 
-    Luodaan tutkittavat genomit
+    Luodaan, instantioidaan, tutkittavat genomit
     
     '''
     subjects = []
@@ -369,7 +374,7 @@ def create_study_subjects(window_size, gc_percentage, cgp_ratio):
             break
 
         subject.set_cpg_ratio_threshold(cgp_ratio)
-        subject.set_gc_percentage_threshold(gc_percentage)
+        subject.set_cg_percentage_threshold(gc_percentage)
         subject.set_window_size(window_size)
 
         subjects.append(subject)
@@ -382,11 +387,10 @@ def search_islands(subjects):
     Käydään läpi tutkittavat genomit ja etsitään saarekkeita kustakin.
 
     '''
+    print('')
+    print('*** Etsitään saarekkeita ***')
+    print('')
     for subject in subjects:
-        print('')
-        print('')
-        print('*** Etsitään saarekkeita', subject.get_name(), 'genomille ***')
-        print('')
         find_islands(subject)
 
 
@@ -396,8 +400,7 @@ def visualize_results(subject_list):
      
     '''
     for subject in subject_list:
-        #bar_chart(subject)
-        scatter_plot(subject)
+        bar_chart(subject)
 
 
 def bar_chart(subject):
@@ -420,8 +423,8 @@ def bar_chart(subject):
         island_lengths.append((end_idx - start_idx))
         island_labels.append(str(start_idx) + '-' + str(end_idx))
     
-    ind = np.arange(N) # the x locations for the groups
-    width = 0.35       # the width of the bars
+    ind = np.arange(N) 
+    width = 0.35       
     
     fig, ax = plt.subplots()
     rects1 = ax.bar(ind, island_lengths, width, color='y')
@@ -433,9 +436,6 @@ def bar_chart(subject):
     ax.set_xticklabels(island_labels)
     
     def autolabel(rects):
-        """
-        Attach a text label above each bar displaying its height
-        """
         for rect in rects:
             height = rect.get_height()
             ax.text(rect.get_x() + rect.get_width()/2., 1.05 * height,
@@ -447,33 +447,13 @@ def bar_chart(subject):
     plt.show()
 
 
-def scatter_plot(subject):
-    '''
-    Scatter plot joka näyttää mahdolliset saarekkeet. 
-    Kokeellinen kuvaaja, jossa ympyrän koko kuvaa saarekkeen pituutta. 
-    Ympyrän sijainti kuvaa saarekkeen CG-pitoisuutta ja saarekkeen CpG-parien 
-    osuutta. 
-    
-    '''
-
-    # Fixing random state for reproducibility
-    np.random.seed(19680801)
-    
-    
-    N = len(subject.get_cpg_islands())
-    x = np.random.rand(N)
-    y = np.random.rand(N)
-    colors = np.random.rand(N)
-    area = np.pi * (15 * np.random.rand(N))**2  # 0 to 15 point radii
-    
-    plt.scatter(x, y, s=area, c=colors, alpha=0.5)
-    plt.show()
-
-
 def compare_results(subject_list):
     ''' Compare results, displays information of each genome '''
+    print('')
+    print('*** Saarekkeiden etsinnän tulokset ***')
     for subject in subject_list:
         subject.display(True)
+    print('')   
 
 
 def start():
@@ -497,7 +477,7 @@ def start():
 
     print('')
     sample_window_size = input('  Koeikkunan aloituskoko (default 200):') or 200
-    gc_percentage_threshold = input('  GC-pitoisuuden raja-arvo s(default 50):') or 50
+    cg_percentage_threshold = input('  CG-pitoisuuden raja-arvo s(default 50):') or 50
     cpg_ratio_threshold = input('  CpG-suhteen raja-arvo (default 60):') or 60
     print('')
         
@@ -506,7 +486,7 @@ def start():
     print('Nimellä "test" käytetään testitiedostoa SH1_genome.fasta')
     print('')
     subjects = create_study_subjects(
-        sample_window_size, gc_percentage_threshold, cpg_ratio_threshold)
+        sample_window_size, cg_percentage_threshold, cpg_ratio_threshold)
 
     search_islands(subjects)
 
@@ -515,7 +495,7 @@ def start():
     print('Saarekkeiden hakuun käytetyt arvot:')
     print('- hakuikkunan aloituskoko:', sample_window_size)
     print('- CpG-suhteen raja-arvo:', cpg_ratio_threshold)
-    print('- GC-pitoisuuden raja-arvo:', gc_percentage_threshold)
+    print('- CG-pitoisuuden raja-arvo:', cg_percentage_threshold)
     print('')
 
     visualize_results(subjects)
