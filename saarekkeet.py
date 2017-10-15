@@ -1,5 +1,17 @@
 '''
-Search for CpG islands
+Python -ohjelmointia biotieteilijöille harjoitustyö 2017.
+
+
+Etsitään mahdollisia CpG-saarekkeita annetuista genomeista.
+
+CpG-saarekkeet ovat genomissa sellaisia alueita, joissa CG-nukleotidiparien 
+osuus on huomattavan suuri verrattuna C- ja G-nukleotidien kokonaismäärään.
+CpG-saareke ei ole kuitenkaan yksikäsitteisesti määritelty.
+(https://en.wikipedia.org/wiki/CpG_site).
+
+
+@author Toni Räsänen
+
 '''
 
 #!/usr/bin/env python3
@@ -11,15 +23,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-cpg_ratio_threshold = 0
-gc_percentage_threshold = 0
-window_size = 0
-
-
 
 class ResearchSubject:
     '''
-    Genome under research
+    Luokka pyrkii kokoamaan yhteen tietoja tutkittavasta genomista. 
+    
+    Luokka sisältää genomin nimen, sekvenssin ja listan mahdollisista löydetyistä 
+    CpG-saarekkeista. Luokassa on sähköpostiosoite jota käytetään genomin sekvenssin
+    hakemisessa internet-palvelusta. Luokka sisältää myös tiedon saarekkeiden 
+    haussa käytetyistä raja-arvoista; näyteikkunan aloituskoko (window_size),
+    CG-pitoisuus (gc_percentage_threshold) ja (“Obs/Exp”) CpG-parien osuus
+    (gc_percentage_threshold).
+    
+    Luokalla on metodi display jolla se tulostaa genomin tiedot. Tätä käytetään
+    vertailtaessa tuloksia saareke-etsinnän lopuksi. 
+    
+    Luokalla on metodi populate_subject_from_input, jota käytetään 
+    genomi-instanssien luomiseen.
+    
     '''    
     
     genome_name = ''
@@ -33,7 +54,13 @@ class ResearchSubject:
 
     def populate_subject_from_input(self):
         '''
-        Populate genome from input
+        Käytetään genomi-instanssien luomiseen. 
+        
+        Kysytään käyttäjältä tietoja tutkittavasta genomista. 
+        Haetaan genomin tunnisteen perusteella genomille sekvenssi internet-
+        palvelusta. Jos genominen nimeksi annetaan "test" luetaan genomille 
+        sekvenssi testitiedostosta (SH1_genome.fasta).
+        
         '''
         self.genome_name = input('  Tutkittavan genomin nimi (tai Q niinkuin quit): ')
 
@@ -58,7 +85,18 @@ class ResearchSubject:
 
 
     def display(self, verbose):
-        ''' Print information of the genome including island search results '''
+        ''' 
+        Tulostetaan genomin tiedot konsoliin. Käytetään vertailtaessa tuloksia 
+        saareke-etsinnän lopuksi. 
+        
+        Tulostaa genomin tunnisteen (nimen), genomin sekvenssin pituuden,
+        mahdollisten löydettyjen saarekkeiden lukumäärän. 
+        
+        Listaa lisäksi kaikki löydetyt saarekkeet ja tulostaa niiden pituuden,
+        saarekkeen alku- ja loppukohdan (indeksin) genomin sekvenssissä sekä
+        saarekkeelle lasketut arvot CG-pitoisuudesta ja CpG-parien osuudesta.
+        
+        '''
         print('')
         print('Genomin tietoja:')
         print('- nimi:', self.genome_name)
@@ -123,6 +161,15 @@ class ResearchSubject:
 
 
 def calculate_details(seq, region_start, region_end):
+    '''
+    Lasketaan löydetylle saarekkeelle CG-pitoisuus (“CG%”) ja CpG-parien osuus
+    (“Obs/Exp”).
+    Palautetaan arvot merkkijonona.
+    
+    Tietoja käytetään ja ne näytetään löydettyjen saarekkeiden vertaiuosiossa
+    jossa löydetyt saarekkeet listatataan.
+    
+    '''
     
     def obs(nucleotide_seq_str):
         gc_pairs_obs = nucleotide_seq_str.count('CG')
@@ -151,9 +198,12 @@ def calculate_details(seq, region_start, region_end):
 
 def read_fasta_file_from_filesystem(file_name):
     '''
-    Mainly for testing purposes.
+    Luetaan genomin sekvenssi tiedostosta ja palautetaan se.
+    
+    Tätä funktiota käytetään testisekvenssin lukemiseen tiedostosta.
+    
     '''
-    dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
+    #dummy_test_seq = 'CTGGACACCAGCGTAGACCTGCGGTTCAAGTGACCATGCCGGGAATCGTCTCACAGTACGTGCTCCCCGT'
     genome_seq = []
 
     with open(file_name) as fasta:
@@ -166,7 +216,12 @@ def read_fasta_file_from_filesystem(file_name):
 
 def get_sequence_from_the_internet(organism_name, email):
     '''
-    Try to find genome for given organism from the internet in a fasta format.
+    Haetaan annetulla genomin nimellä genomille sekvenssi internetistä
+    Bio.Entrez palvelusta. Palvelun käyttöön tarvitaan sähköpostiosoite.
+    
+    Palautetaan löytynyt sekvenssi. Jos palvelu palauttaa virheen sitä ei
+    käsitellä vaan se menee eteenpäin käyttäjälle.
+    
     (http://biopython.org/DIST/docs/api/Bio.Entrez-module.html)
 
     '''
@@ -181,8 +236,13 @@ def get_sequence_from_the_internet(organism_name, email):
 
 def island_rule_1_ok(subject, seq):
     '''
-    Check if the CpG sites rule #1 is satisfied
-    A GC percentage greater than 50% (https://en.wikipedia.org/wiki/CpG_site)
+    Tarkistetaan ylittyykö CG-pitoisuus annetulla sekvenssialueella (seq).
+    
+    CG-pitoisuus (“CG%”) on vähintään 50%. CG-pitoisuus lasketaan G- ja 
+    C-nukleotidien yhteisenä prosenttiosuutena (C% + G%) ko. alueella.
+    
+    Raja-arvoa on mahdollista muuttaa ohjelman käynnistyksen yhteydessä.
+    
     '''
     nucleotide_seq_str = seq
     gc_percentage_threshold = subject.get_gc_percentage_threshold()
@@ -203,9 +263,20 @@ def island_rule_1_ok(subject, seq):
 
 def island_rule_2_ok(subject, seq):
     '''
-    Check if the CpG sites rule #2 is satisfied
-    An observed-to-expected CpG ratio greater than 60 %
-    (https://en.wikipedia.org/wiki/CpG_site)
+    Tarkistetaan onko havannoitujen-vs-oletusarvoisten (“Obs/Exp”) CpG-parien 
+    osuus yli 0.6 (60%) annetulla sekvenssialueella (seq)
+    
+    
+    Havainnoitujen (Obs) CpG-parien määrä on yksinkertaisesti välittömästi 
+    toisiaan seuraavien C- ja G-nukleotidien määrä ko. alueella.
+
+    Oletusarvo CpG-pareille (Exp) voidaan arvioida kaikkien C- ja G-nukleotidien 
+    määrästä ko. alueella kertomalla löydettyjen C-nukleotidien määrä 
+    G-nukleotidien määrällä ja normalisoimalla tulo alueen pituudella: 
+    Exp = (C:n määrä * G:n määrä) / alueen_pituus.
+    
+    Raja-arvoa on mahdollista muuttaa ohjelman käynnistyksen yhteydessä.
+    
     '''
     nucleotide_seq_str = seq
 
@@ -227,14 +298,18 @@ def island_rule_2_ok(subject, seq):
 
 def island_conditions_ok(subject, seq):
     '''
-    Check if island conditions are met
+    Tarkistetaan toteutuuko saarekkeille asetetut vaatimukset annetulla
+    sekvenssialuella (seq)
     '''
     return island_rule_1_ok(subject, seq) and island_rule_2_ok(subject, seq)
 
 
 def find_islands(subject):
     '''
-    Find CpG islands from the given nucleotide sequence
+    Etsitään CpG-saarekkeita genomin sekvenssistä käymällä sitä läpi näyteikkunan
+    kokoisina paloina kasvattaen näyteikkunaa kunnes saarekkeen ehdot eivät
+    enää täyty. Siirretään näyteikkunan aloitussekvenssiä yhdellä kunnes koko
+    genomi on käyty läpi.
 
     '''
     nucleotide_seq = subject.get_genome()
@@ -280,7 +355,10 @@ def find_islands(subject):
 
 
 def create_study_subjects(window_size, gc_percentage, cgp_ratio):
-    ''' Create genomes  '''
+    ''' 
+    Luodaan tutkittavat genomit
+    
+    '''
     subjects = []
 
     while 1:
@@ -301,7 +379,7 @@ def create_study_subjects(window_size, gc_percentage, cgp_ratio):
 
 def search_islands(subjects):
     '''
-    Gets list of organisms whos genomes are studied for islands
+    Käydään läpi tutkittavat genomit ja etsitään saarekkeita kustakin.
 
     '''
     for subject in subjects:
@@ -313,16 +391,24 @@ def search_islands(subjects):
 
 
 def visualize_results(subject_list):
-    ''' Visualize results      
+    ''' 
+    Näytetään kuvaajat tutkittujen genomien löydöksistä.
+     
     '''
     for subject in subject_list:
-        bar_chart(subject)
+        #bar_chart(subject)
+        scatter_plot(subject)
 
 
 def bar_chart(subject):
     ''' 
-    Show possible islands in bar chart.
-    Y-axis shows the length of the islans
+    Näytetään genomin mahdolliset saarekkeet pylväsdiagrammiesityksenä.
+
+    Saarekkeet ovat rivissä x-akselilla ja pylväiden pituus kuvaa saarekkeen
+    kokoa, saarekkeen pituus näkyy siis y-akselilla.
+    
+    Kuvaajan heikkoutena on mm. se että kuvaaja menee nopeasti tukkoon jos 
+    genomista löytyy paljon saarekkeita.
     
     '''
     N = len(subject.get_cpg_islands())
@@ -361,6 +447,27 @@ def bar_chart(subject):
     plt.show()
 
 
+def scatter_plot(subject):
+    '''
+    Scatter plot joka näyttää mahdolliset saarekkeet. 
+    Kokeellinen kuvaaja, jossa ympyrän koko kuvaa saarekkeen pituutta. 
+    Ympyrän sijainti kuvaa saarekkeen CG-pitoisuutta ja saarekkeen CpG-parien 
+    osuutta. 
+    
+    '''
+
+    # Fixing random state for reproducibility
+    np.random.seed(19680801)
+    
+    
+    N = len(subject.get_cpg_islands())
+    x = np.random.rand(N)
+    y = np.random.rand(N)
+    colors = np.random.rand(N)
+    area = np.pi * (15 * np.random.rand(N))**2  # 0 to 15 point radii
+    
+    plt.scatter(x, y, s=area, c=colors, alpha=0.5)
+    plt.show()
 
 
 def compare_results(subject_list):
@@ -371,7 +478,19 @@ def compare_results(subject_list):
 
 def start():
     '''
-    The main thing. Asks user input.
+    Ohjelman aloitus. 
+    Kysytään käyttäjältä saarekkeiden etsinnässä käytetyt raja-arvot, 
+    käyttäjä voi enterillä hyväksyä oletusarvot.  
+    
+    Kysytään käyttäjältä tutkittavien genomien nimet, tunnisteet ja luodaan 
+    tutkittavat genomit (create_study_subjects).
+    
+    Etsitään saarekkeita (search_islands).
+    
+    Tulostetaan etsinnäin tulokset kultakin genomilta (compare_results).
+    
+    Näytetään kuvaaja kullekin genomille saareke-etsinnäin tuloksista 
+    (visualize_results).
 
     '''
     subjects = []
