@@ -1,0 +1,88 @@
+
+Python -ohjelmointia biotieteilijöille 2017 harjoitustyö
+
+Ohjelma, joka etsii annetusta genomista CpG-saarekkeita.
+
+Testattu kahdella genomilla 186972394 ja 14630660. Esimerkkigenomit löydetty sivulta: 
+http://biopython.org/DIST/docs/api/Bio.Entrez-module.html.
+
+Ohjelma kysyy alussa käyttäjältä hakuparametreja: hakuikkunan aloituskoko, CpG-suhteen raja-arvo, CG-pitoisuuden raja-arvo.
+Parametreilla on oletusarvot (200, 50, 60) jotka voi suoraan hyväksyä enterillä. 
+Seuraavaksi ohjelma kysyy tutkittavan genomin tunnusta. Käyttäjä voi antaa nimeksi "test", tällöin käyteään testi.fasta
+tiedostossa olevaa genomia. Jos käyttäjä syöttää jonkin muun tunnuksen haetaan genomin sekvenssi internetistä Bio.Entrez
+palvelusta.
+Tämän jälkeen sekvenssiä aletaan käymään läpi. 
+   Etsitään CpG-saarekkeita genomin sekvenssistä käymällä sitä läpi näyteikkunan
+    kokoisina paloina kasvattaen näyteikkunaa kunnes saarekkeen ehdot eivät
+    enää täyty. Siirretään näyteikkunan aloitussekvenssiä yhdellä kunnes koko
+    genomi on käyty läpi.
+
+
+
+
+
+
+
+Testitulosteita eri parametreilla:
+
+Genomi:
+- nimi: 186972394
+- sekvenssin pituus: 1302
+- mahdollisten CpG-saarekkeiden lkm: 49
+   saareke 1 : pituus 20 start_index: 206 end_index: 226 (Obs/Exp = 166.67 ja %CG = 50.0)
+   saareke 2 : pituus 22 start_index: 385 end_index: 407 (Obs/Exp = 73.33 ja %CG = 50.0)
+   saareke 3 : pituus 24 start_index: 386 end_index: 410 (Obs/Exp = 66.67 ja %CG = 50.0)
+   saareke 4 : pituus 20 start_index: 387 end_index: 407 (Obs/Exp = 80.0 ja %CG = 50.0)
+   ..... Loput rivit leikattu pois tilan säästämiseksi ...
+   
+Saarekkeiden hakuun käytetyt arvot:
+- hakuikkunan aloituskoko: 20
+- CpG-suhteen raja-arvo: 60
+- CG-pitoisuuden raja-arvo: 50
+
+Genomi:
+- nimi: 186972394
+- sekvenssin pituus: 1302
+- mahdollisten CpG-saarekkeiden lkm: 602
+   saareke 1 : pituus 40 start_index: 4 end_index: 44 (Obs/Exp = 114.29 ja %CG = 30.0)
+   saareke 2 : pituus 40 start_index: 5 end_index: 45 (Obs/Exp = 114.29 ja %CG = 30.0)
+   saareke 3 : pituus 43 start_index: 6 end_index: 49 (Obs/Exp = 107.5 ja %CG = 30.23)
+   saareke 4 : pituus 43 start_index: 7 end_index: 50 (Obs/Exp = 107.5 ja %CG = 30.23)
+   ..... Loput rivit leikattu pois tilan säästämiseksi ...
+
+Saarekkeiden hakuun käytetyt arvot:
+- hakuikkunan aloituskoko: 40
+- CpG-suhteen raja-arvo: 50
+- CG-pitoisuuden raja-arvo: 30
+
+
+
+Genomi:
+- nimi: 14630660
+- sekvenssin pituus: 406
+- mahdollisten CpG-saarekkeiden lkm: 146
+   saareke 1 : pituus 357 start_index: 49 end_index: 406 (Obs/Exp = 73.28 ja %CG = 54.06)
+   saareke 2 : pituus 200 start_index: 50 end_index: 250 (Obs/Exp = 64.23 ja %CG = 50.0)
+   saareke 3 : pituus 344 start_index: 62 end_index: 406 (Obs/Exp = 68.25 ja %CG = 54.07)
+   saareke 4 : pituus 212 start_index: 63 end_index: 275 (Obs/Exp = 68.81 ja %CG = 50.0)
+   ..... Loput rivit leikattu pois tilan säästämiseksi ...
+
+Saarekkeiden hakuun käytetyt arvot:
+- hakuikkunan aloituskoko: 200
+- CpG-suhteen raja-arvo: 60
+- CG-pitoisuuden raja-arvo: 50
+
+Genomi:
+- nimi: 14630660
+- sekvenssin pituus: 406
+- mahdollisten CpG-saarekkeiden lkm: 162
+   saareke 1 : pituus 100 start_index: 6 end_index: 106 (Obs/Exp = 64.1 ja %CG = 50.0)
+   saareke 2 : pituus 101 start_index: 7 end_index: 108 (Obs/Exp = 62.35 ja %CG = 50.5)
+   saareke 3 : pituus 108 start_index: 8 end_index: 116 (Obs/Exp = 74.48 ja %CG = 50.0)
+   saareke 4 : pituus 116 start_index: 9 end_index: 125 (Obs/Exp = 69.05 ja %CG = 50.0)
+   ..... Loput rivit leikattu pois tilan säästämiseksi ...
+
+Saarekkeiden hakuun käytetyt arvot:
+- hakuikkunan aloituskoko: 100
+- CpG-suhteen raja-arvo: 60
+- CG-pitoisuuden raja-arvo: 50
