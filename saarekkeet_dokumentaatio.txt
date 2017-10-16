@@ -3,27 +3,75 @@ Python -ohjelmointia biotieteilijöille 2017 harjoitustyö
 
 Ohjelma, joka etsii annetusta genomista CpG-saarekkeita.
 
-Testattu kahdella genomilla 186972394 ja 14630660. Esimerkkigenomit löydetty sivulta: 
-http://biopython.org/DIST/docs/api/Bio.Entrez-module.html.
-
-Ohjelma kysyy alussa käyttäjältä hakuparametreja: hakuikkunan aloituskoko, CpG-suhteen raja-arvo, CG-pitoisuuden raja-arvo.
-Parametreilla on oletusarvot (200, 50, 60) jotka voi suoraan hyväksyä enterillä. 
-Seuraavaksi ohjelma kysyy tutkittavan genomin tunnusta. Käyttäjä voi antaa nimeksi "test", tällöin käyteään testi.fasta
-tiedostossa olevaa genomia. Jos käyttäjä syöttää jonkin muun tunnuksen haetaan genomin sekvenssi internetistä Bio.Entrez
-palvelusta.
-Tämän jälkeen sekvenssiä aletaan käymään läpi. 
-   Etsitään CpG-saarekkeita genomin sekvenssistä käymällä sitä läpi näyteikkunan
-    kokoisina paloina kasvattaen näyteikkunaa kunnes saarekkeen ehdot eivät
-    enää täyty. Siirretään näyteikkunan aloitussekvenssiä yhdellä kunnes koko
-    genomi on käyty läpi.
+Sisältö
+1. Yleiskuvaus toiminnallisuudesta
+2. Toteutuksesta tarkemmin
+3. Testitulosteet
 
 
+Testattu kahdella genomilla 186972394 ja 14630660. Esimerkkigenomit löydetty: 
+sivulta http://biopython.org/DIST/docs/api/Bio.Entrez-module.html.
+Tulosteet hakutuloksista dokumentin lopussa kohdassa 3.
 
 
+1. Yleiskuvaus toiminnallisuudesta
+
+Ohjelma kysyy alussa käyttäjältä saarekkeiden hakuparametreja: hakuikkunan 
+aloituskoko, CpG-suhteen raja-arvo, CG-pitoisuuden raja-arvo. Parametreilla 
+on oletusarvot (200, 50, 60), jotka voi suoraan hyväksyä enterillä. Seuraavaksi 
+ohjelma kysyy tutkittavan genomin tunnusta. Käyttäjä voi antaa nimeksi "test", 
+tällöin käytetään SH1_genome.fasta tiedostossa olevaa genomia. Jos käyttäjä 
+syöttää jonkin muun tunnuksen haetaan genomin sekvenssi internetistä Bio.Entrez
+palvelusta. Tällöin käyttäjältä kysytään myös sähköpostiosoite palvelua varten.
+Tämän jälkeen haettua sekvenssiä (tai sekvenssejä) aletaan käymään läpi ja 
+etsimään saarekkeita. 
+
+CpG-saarekkeita etsitään genomin sekvenssistä käymällä sekvenssiä läpi 
+näyteikkunan kokoisina paloina kasvattaen näyteikkunaa kunnes saarekkeen ehdot 
+eivät enää täyty. Tällöin siirretään näyteikkunan aloituskohtaa yhdellä ja 
+otetaan uusi näyte ja kasvatetaan jälleen näyteikkunaa kunnes saarekkeen ehdot 
+eivät enää täyty. Jatketaan näin kunnes koko genomi on käyty läpi. Tämän 
+jälkeen tulostetaan käyttäjälle etsintätulokset genomeittain.
+
+Ohjelma kysyy käyttäjältä käynnistyksen yhteydessä tutkittavien genomien nimet,
+ohjelmalle voi syöttää haluamansa määrän genomeja. Lopuksi ohjelma tulostaa 
+yhteenvedon saarekkeiden hakutuloksista kullekin genomille. Tulostuksessa
+listataan löytyneet saarekkeet. Saarekkeista tulostetaan saareekkeen alku- ja
+loppukohta, näistä laskettu saarekkeen pituus sekä saarekkeen CG-pitoisuus ja
+CpG-suhteen arvo (eli hakukriteerien toteuma kullekin saarekkeelle). 
+
+Ohjelma visualisoi saarekelöydökset piirtämällä pylväsdiagrammiesityksen 
+löydetyistä saarekkeista kullekin genomille. Yksi x-akselilla oleva pylväs 
+vastaa yhtä löytynyttä saareketta. Kuvaajan y-akseli kuvaa saarekkeen pituutta. 
+Pylväsdiagrammin ongelma on se, että kuva menee helposti tukkoon kun löytyneitä 
+saarekkeita on useampia. Scatterplot henkinen toteutus voisi myös olla hyvä,
+jollei parempikin. Tällöin ympyrän koko voisi kuvata saarekkeen pituutta ja 
+saarekkeen sijainti kuvaajassa voisi kuvata saarekkeen CG-pitoisuuden ja
+CpG parien suhteen arvoja.
 
 
+2. Toteutuksesta tarkemmin
 
-Testitulosteita eri parametreilla:
+Toteutuksessa on käytetty ResearchSubject-luokkaa kuvaamaan tutkittavia genomeja. 
+ResearchSubjectit osaavat kysellä tarvitsemansa tiedot: genomin nimen, Bio.Entrez
+palveluun tarvittavan sähköpostiosoitteen sekä lukea tutkittavan genomin 
+sekvenssin tiedostosta tai Bio.Entrez palvelusta (populate_subject_from_input
+metodi). Subjectit osaavat tulostaa tiedot itsestään ja löytyneistä saarekkeista
+loppuyhteenvetoa varten (display-metodi).
+
+Saarekkeiden etsintöjen hakuparametrit, raja-arvot (saarekkeen minimikoko, 
+CG-pitoisuus ja CpG-parien osuus) kysytään käyttäjältä erikseen ja ovat yhteiset
+kaikille tutkittaville genomeille.
+
+Sekvenssien hakuun internetistä käytetään Bio.Entrez palvelua. 
+Kuvaajien piirtämiseen käytetään matplotlib ja numpy kirjastoja.
+
+Ohjelmakoodissa metodit on pyritty dokumentoimaan.
+
+
+3. Testitulosteet
+
+Kahden genomin testitulosteet eri parametreilla:
 
 Genomi:
 - nimi: 186972394
