@@ -9,7 +9,7 @@ Sisältö
 3. Testitulosteet
 
 
-Testattu kahdella genomilla 186972394 ja 14630660. Esimerkkigenomit löydetty: 
+Testattu kahdella genomilla 186972394 ja 14630660. Esimerkkigenomit otettu 
 sivulta http://biopython.org/DIST/docs/api/Bio.Entrez-module.html.
 Tulosteet hakutuloksista dokumentin lopussa kohdassa 3.
 
